@@ -110,7 +110,10 @@ const checkAuthStatus = async () => {
   }
 }
 
-const handleAuthSuccess = () => {
+const handleAuthSuccess = (newStatus) => {
+  if (newStatus && typeof newStatus === 'object') {
+    authStatus.value = { ...authStatus.value, ...newStatus }
+  }
   checkAuthStatus()
   loadSettings()
 }
@@ -160,7 +163,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <!-- Unauthenticated State: Show AuthWizard without sidebar -->
+  <AuthWizard
+    v-if="!authStatus.authenticated"
+    :auth-status="authStatus"
+    @auth-success="handleAuthSuccess"
+  />
+
+  <!-- Authenticated State: Show App Shell with Sidebar -->
+  <div v-else class="app-shell">
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'mobile-open': mobileMenuOpen }">
       <div class="brand">
@@ -179,7 +190,7 @@ onMounted(async () => {
 
       <p class="sidebar-copy">{{ t('app.subtitle') }}</p>
 
-      <nav v-if="authStatus.authenticated" class="sidebar-nav">
+      <nav class="sidebar-nav">
         <button
           :class="{ selected: activeView === 'all' }"
           @click="selectNav('all')"
@@ -258,51 +269,41 @@ onMounted(async () => {
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- Unauthenticated State: Show AuthWizard -->
-      <AuthWizard
-        v-if="!authStatus.authenticated"
-        :auth-status="authStatus"
-        @auth-success="handleAuthSuccess"
+      <!-- Topbar -->
+      <div class="topbar">
+        <div>
+          <span class="eyebrow">{{ t('app.title') }}</span>
+          <h1 v-if="activeView === 'all'">{{ t('nav.allChats') }}</h1>
+          <h1 v-else-if="activeView === 'groups'">{{ t('nav.groups') }}</h1>
+          <h1 v-else-if="activeView === 'channels'">
+            {{ t('nav.channels') }}
+          </h1>
+          <h1 v-else-if="activeView === 'bots'">{{ t('nav.bots') }}</h1>
+          <h1 v-else-if="activeView === 'users'">{{ t('nav.users') }}</h1>
+          <h1 v-else-if="activeView === 'settings'">
+            {{ t('settings.title') }}
+          </h1>
+          <h1 v-else-if="activeView === 'logs'">{{ t('logs.title') }}</h1>
+        </div>
+      </div>
+
+      <!-- Views -->
+      <ChatsView
+        v-if="
+          ['all', 'groups', 'channels', 'bots', 'users'].includes(activeView)
+        "
+        :category="activeView"
       />
 
-      <!-- Authenticated State: Show Panel Views -->
-      <template v-else>
-        <!-- Topbar -->
-        <div class="topbar">
-          <div>
-            <span class="eyebrow">{{ t('app.title') }}</span>
-            <h1 v-if="activeView === 'all'">{{ t('nav.allChats') }}</h1>
-            <h1 v-else-if="activeView === 'groups'">{{ t('nav.groups') }}</h1>
-            <h1 v-else-if="activeView === 'channels'">
-              {{ t('nav.channels') }}
-            </h1>
-            <h1 v-else-if="activeView === 'bots'">{{ t('nav.bots') }}</h1>
-            <h1 v-else-if="activeView === 'users'">{{ t('nav.users') }}</h1>
-            <h1 v-else-if="activeView === 'settings'">
-              {{ t('settings.title') }}
-            </h1>
-            <h1 v-else-if="activeView === 'logs'">{{ t('logs.title') }}</h1>
-          </div>
-        </div>
+      <SettingsView
+        v-else-if="activeView === 'settings'"
+        :settings="settings"
+        :auth-status="authStatus"
+        @update:settings="updateSettings"
+        @logout="handleLogout"
+      />
 
-        <!-- Views -->
-        <ChatsView
-          v-if="
-            ['all', 'groups', 'channels', 'bots', 'users'].includes(activeView)
-          "
-          :category="activeView"
-        />
-
-        <SettingsView
-          v-else-if="activeView === 'settings'"
-          :settings="settings"
-          :auth-status="authStatus"
-          @update:settings="updateSettings"
-          @logout="handleLogout"
-        />
-
-        <LogsView v-else-if="activeView === 'logs'" />
-      </template>
+      <LogsView v-else-if="activeView === 'logs'" />
     </main>
 
     <!-- Global Confirm Modal -->

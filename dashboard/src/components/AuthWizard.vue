@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useAuthToken } from '../composables/useAuthToken'
+import { isWailsRuntime, useAuthToken } from '../composables/useAuthToken'
 import { openExternal } from '../composables/useExternalLink'
 import { useI18n } from '../i18n'
 import {
@@ -8,11 +8,13 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Info,
   KeyRound,
   Loader2,
   Phone,
   ShieldCheck
 } from '../icons'
+import { isLoopbackHost } from '../utils/loopback'
 
 const props = defineProps({
   authStatus: {
@@ -24,7 +26,9 @@ const props = defineProps({
 const emit = defineEmits(['auth-success'])
 
 const { authHeaders } = useAuthToken()
-const { t } = useI18n()
+const { t, locale, setLocale, splitOn } = useI18n()
+
+const bannerBParts = computed(() => splitOn('auth.credsBannerB', 'apiTools'))
 
 const serverStep = computed(() => {
   if (
@@ -48,7 +52,9 @@ const currentStep = computed(() => stepOverride.value ?? serverStep.value)
 
 const apiId = ref('')
 const apiHash = ref('')
-const phoneNumber = ref(props.authStatus.phone || '')
+const phoneNumber = ref(
+  props.authStatus.phone || props.authStatus.phone_number || ''
+)
 const code = ref('')
 const password = ref('')
 const phoneCodeHash = ref('')
@@ -56,8 +62,11 @@ const phoneCodeHash = ref('')
 watch(
   () => props.authStatus,
   (val) => {
-    if (val && val.phone && !phoneNumber.value) {
-      phoneNumber.value = val.phone
+    if (val) {
+      const phoneVal = val.phone || val.phone_number
+      if (phoneVal && !phoneNumber.value) {
+        phoneNumber.value = phoneVal
+      }
     }
   },
   { immediate: true }
@@ -78,7 +87,8 @@ const apiCall = async (url, body) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders()
+        ...authHeaders(),
+        'X-TGDL-Request': '1'
       },
       body: JSON.stringify(body)
     })
@@ -120,394 +130,777 @@ const saveCredentials = async () => {
     errorMessage.value = t('auth.errApiIdFormat')
     return
   }
-  if (!/^[a-fA-F0-9]{32}$/.test(trimmedApiHash)) {
+  if (!/^[0-9a-fA-F]{32}$/.test(trimmedApiHash)) {
     errorMessage.value = t('auth.errApiHashFormat')
     return
   }
 
-  try {
-    await apiCall('/api/auth/credentials', {
-      api_id: trimmedApiId,
-      api_hash: trimmedApiHash
-    })
-    stepOverride.value = 2
-  } catch {
-    // Manejado en apiCall
-  }
+  const data = await apiCall('/api/auth/credentials', {
+    api_id: trimmedApiId,
+    api_hash: trimmedApiHash
+  })
+  emit('auth-success', data)
 }
 
 const sendCode = async () => {
-  const trimmedPhone = phoneNumber.value.trim()
-  if (!trimmedPhone) {
-    errorMessage.value = t('auth.step2Desc')
+  if (!phoneNumber.value) {
+    errorMessage.value = t('auth.errPhone')
     return
   }
-
-  try {
-    const data = await apiCall('/api/auth/send-code', {
-      phone: trimmedPhone
-    })
-    if (data.phone_code_hash) {
-      phoneCodeHash.value = data.phone_code_hash
-    }
-    stepOverride.value = 3
-  } catch {
-    // Manejado en apiCall
+  let cleanPhone = phoneNumber.value.trim().replace(/\s+/g, '')
+  if (!cleanPhone.startsWith('+')) {
+    cleanPhone = '+' + cleanPhone
   }
+  phoneNumber.value = cleanPhone
+
+  const data = await apiCall('/api/auth/send-code', {
+    phone: cleanPhone,
+    phone_number: cleanPhone
+  })
+
+  if (data.phone_code_hash) {
+    phoneCodeHash.value = data.phone_code_hash
+  }
+
+  emit('auth-success', {
+    ...props.authStatus,
+    state: 'WAITING_CODE',
+    phone: cleanPhone,
+    phone_number: cleanPhone
+  })
 }
 
 const verifyCode = async () => {
-  const trimmedCode = code.value.trim()
-  if (!trimmedCode) return
+  if (!code.value) {
+    errorMessage.value = t('auth.errCode')
+    return
+  }
+  const data = await apiCall('/api/auth/sign-in', {
+    phone: phoneNumber.value,
+    phone_number: phoneNumber.value,
+    code: code.value.trim(),
+    phone_code_hash: phoneCodeHash.value
+  })
 
-  try {
-    const data = await apiCall('/api/auth/sign-in', {
-      phone: phoneNumber.value.trim(),
-      code: trimmedCode,
-      phone_code_hash: phoneCodeHash.value
-    })
-
-    if (data.state === 'WAITING_2FA') {
-      stepOverride.value = 4
-    } else if (data.state === 'LOGGED_IN' || data.success) {
-      emit('auth-success')
-    }
-  } catch {
-    // Manejado en apiCall
+  code.value = ''
+  if (data.status === '2fa_required' || data.state === 'WAITING_2FA') {
+    emit('auth-success', { ...props.authStatus, state: 'WAITING_2FA' })
+  } else {
+    emit('auth-success', { ...data, authenticated: true })
   }
 }
 
-const submit2FA = async () => {
-  const trimmedPassword = password.value.trim()
-  if (!trimmedPassword) return
+const insecureTransport = computed(() => {
+  if (isWailsRuntime()) return false
+  return (
+    !isLoopbackHost(window.location.hostname) &&
+    window.location.protocol !== 'https:'
+  )
+})
 
-  try {
-    const data = await apiCall('/api/auth/2fa', {
-      password: trimmedPassword
-    })
+const verify2FA = async () => {
+  if (!password.value) {
+    errorMessage.value = t('auth.err2fa')
+    return
+  }
+  const data = await apiCall('/api/auth/2fa', {
+    password: password.value
+  })
 
-    if (data.state === 'LOGGED_IN' || data.success) {
-      emit('auth-success')
+  password.value = ''
+  emit('auth-success', { ...data, authenticated: true })
+}
+
+const goBack = async () => {
+  errorMessage.value = ''
+
+  if (currentStep.value === 2) {
+    stepOverride.value = 1
+    return
+  }
+
+  if (currentStep.value === 3) {
+    code.value = ''
+    stepOverride.value = 2
+    return
+  }
+
+  if (currentStep.value === 4) {
+    loading.value = true
+    code.value = ''
+    password.value = ''
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+          'X-TGDL-Request': '1'
+        }
+      })
+    } catch (e) {
+      console.error(e)
     }
-  } catch {
-    // Manejado en apiCall
+    loading.value = false
+    stepOverride.value = 2
+    emit('auth-success', {
+      ...props.authStatus,
+      authenticated: false,
+      state: props.authStatus.has_credentials ? 'NOT_LOGGED_IN' : 'UNCONFIGURED'
+    })
   }
 }
 
-const goBack = () => {
-  if (currentStep.value > 1) {
-    stepOverride.value = currentStep.value - 1
-  }
+const cancelBack = () => {
+  errorMessage.value = ''
+  stepOverride.value = null
 }
 </script>
 
 <template>
-  <div class="auth-wrapper">
+  <div class="auth-overlay">
     <div class="auth-card">
+      <!-- Header -->
       <div class="auth-header">
-        <h2>{{ t('auth.title') }}</h2>
-        <div class="step-indicator">
-          <span :class="{ active: currentStep === 1 }">1</span>
-          <span :class="{ active: currentStep === 2 }">2</span>
-          <span :class="{ active: currentStep === 3 }">3</span>
-          <span :class="{ active: currentStep === 4 }">4</span>
+        <div class="auth-logo">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="m22 2-7 20-4-9-9-4Z" />
+            <path d="M22 2 11 13" />
+          </svg>
+        </div>
+        <div class="auth-title-box">
+          <h2>{{ t('auth.title') }}</h2>
+          <p>{{ t('auth.subtitle') }}</p>
+        </div>
+        <label
+          class="lang-switch-toggle"
+          :title="locale === 'es' ? 'Switch to English' : 'Cambiar a Español'"
+        >
+          <input
+            type="checkbox"
+            :checked="locale === 'en'"
+            @change="setLocale(locale === 'es' ? 'en' : 'es')"
+          />
+          <span class="lang-switch-track">
+            <span
+              class="lang-switch-label left"
+              :class="{ active: locale === 'es' }"
+              >ES</span
+            >
+            <span
+              class="lang-switch-label right"
+              :class="{ active: locale === 'en' }"
+              >EN</span
+            >
+            <span class="lang-switch-thumb"></span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div
+          class="step-item"
+          :class="{ active: currentStep === 1, done: currentStep > 1 }"
+        >
+          <span class="step-num">1</span>
+          <span class="step-label">{{ t('auth.stepApi') }}</span>
+        </div>
+        <div class="step-divider"></div>
+        <div
+          class="step-item"
+          :class="{ active: currentStep === 2, done: currentStep > 2 }"
+        >
+          <span class="step-num">2</span>
+          <span class="step-label">{{ t('auth.stepPhone') }}</span>
+        </div>
+        <div class="step-divider"></div>
+        <div
+          class="step-item"
+          :class="{
+            active: currentStep === 3 || currentStep === 4,
+            done: currentStep > 4
+          }"
+        >
+          <span class="step-num">3</span>
+          <span class="step-label">{{ t('auth.stepCode') }}</span>
+        </div>
+        <div class="step-divider"></div>
+        <div
+          class="step-item"
+          :class="{ active: currentStep === 5, done: currentStep === 5 }"
+        >
+          <span class="step-num">4</span>
+          <span class="step-label">{{ t('auth.stepDone') }}</span>
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div v-if="errorMessage" class="error-banner">
-        <AlertCircle :size="18" />
-        <span>{{ errorMessage }}</span>
-      </div>
-
-      <!-- Step 1: API Credentials -->
+      <!-- Step 1: Credenciales API -->
       <div v-if="currentStep === 1" class="step-content">
-        <div class="step-icon"><KeyRound :size="32" /></div>
-        <h3>{{ t('auth.step1Title') }}</h3>
-        <p>{{ t('auth.step1Desc') }}</p>
+        <div class="step-intro">
+          <KeyRound :size="28" class="icon-accent" />
+          <div>
+            <h3>{{ t('auth.credsTitle') }}</h3>
+            <p>{{ t('auth.credsText') }}</p>
+          </div>
+        </div>
 
-        <div class="my-telegram-banner">
-          <span>{{ t('auth.credsBannerA') }}</span>
-          <a
-            href="#"
-            class="inline-link"
-            @click.prevent="openExternal('https://my.telegram.org')"
-          >
-            {{ t('auth.credsBannerB') }}
-          </a>
+        <div
+          v-if="errorMessage"
+          class="auth-alert danger"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertCircle :size="18" class="alert-icon" />
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="info-banner">
+          <Info :size="16" />
+          <span>
+            {{ t('auth.credsBannerA') }}
+            <a
+              href="https://my.telegram.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="openExternal('https://my.telegram.org', $event)"
+              >my.telegram.org</a
+            >
+            {{ bannerBParts[0] }}<i>API development tools</i
+            >{{ bannerBParts[1] }}
+          </span>
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.apiIdLabel') }}</label>
+          <label>API ID</label>
           <input
             v-model="apiId"
             type="text"
-            placeholder="e.g. 1234567"
-            :disabled="loading"
+            :placeholder="t('auth.apiIdPlaceholder')"
+            @keyup.enter="saveCredentials"
           />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.apiHashLabel') }}</label>
+          <label>API HASH</label>
           <input
             v-model="apiHash"
-            type="text"
-            placeholder="e.g. 0123456789abcdef0123456789abcdef"
-            :disabled="loading"
+            type="password"
+            :placeholder="t('auth.apiHashPlaceholder')"
+            autocomplete="off"
+            @keyup.enter="saveCredentials"
           />
         </div>
 
-        <button
-          class="primary-button action-btn"
-          :disabled="loading"
-          @click="saveCredentials"
-        >
-          <Loader2 v-if="loading" class="spin" :size="18" />
-          <span v-else>{{ t('auth.submit') }}</span>
-          <ArrowRight v-if="!loading" :size="18" />
-        </button>
+        <div class="button-group">
+          <button
+            v-if="stepOverride === 1 && serverStep > 1"
+            class="auth-button secondary btn-back"
+            :disabled="loading"
+            @click="cancelBack"
+          >
+            <ArrowLeft :size="16" />
+            <span>{{ t('common.cancel') }}</span>
+          </button>
+          <button
+            class="auth-button primary"
+            :disabled="loading"
+            @click="saveCredentials"
+          >
+            <Loader2 v-if="loading" class="spin" :size="18" />
+            <template v-else>
+              <span>{{ t('auth.saveContinue') }}</span>
+              <ArrowRight :size="18" />
+            </template>
+          </button>
+        </div>
       </div>
 
-      <!-- Step 2: Phone Number -->
+      <!-- Step 2: Teléfono -->
       <div v-else-if="currentStep === 2" class="step-content">
-        <div class="step-icon"><Phone :size="32" /></div>
-        <h3>{{ t('auth.step2Title') }}</h3>
-        <p>{{ t('auth.step2Desc') }}</p>
+        <div class="step-intro">
+          <Phone :size="28" class="icon-accent" />
+          <div>
+            <h3>{{ t('auth.phoneTitle') }}</h3>
+            <p>{{ t('auth.phoneText') }}</p>
+          </div>
+        </div>
+
+        <div
+          v-if="errorMessage"
+          class="auth-alert danger"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertCircle :size="18" class="alert-icon" />
+          <span>{{ errorMessage }}</span>
+        </div>
 
         <div class="form-group">
           <label>{{ t('auth.phoneLabel') }}</label>
           <input
             v-model="phoneNumber"
-            type="text"
-            placeholder="+1234567890"
-            :disabled="loading"
+            type="tel"
+            :placeholder="t('auth.phonePlaceholder')"
             @keyup.enter="sendCode"
           />
+          <small class="help-text">{{ t('auth.phoneHelp') }}</small>
         </div>
 
-        <div class="btn-group">
-          <button class="secondary-button" :disabled="loading" @click="goBack">
-            <ArrowLeft :size="18" />
-            <span>{{ t('auth.back') }}</span>
+        <div class="button-group">
+          <button
+            class="auth-button secondary btn-back"
+            :disabled="loading"
+            @click="goBack"
+          >
+            <ArrowLeft :size="16" />
+            <span>{{ t('common.back') }}</span>
           </button>
           <button
-            class="primary-button action-btn"
+            class="auth-button primary"
             :disabled="loading"
             @click="sendCode"
           >
             <Loader2 v-if="loading" class="spin" :size="18" />
-            <span v-else>{{ t('auth.sendCode') }}</span>
-            <ArrowRight v-if="!loading" :size="18" />
+            <template v-else>
+              <span>{{ t('auth.sendCode') }}</span>
+              <ArrowRight :size="18" />
+            </template>
           </button>
         </div>
       </div>
 
-      <!-- Step 3: Verification Code -->
+      <!-- Step 3: Código de Verificación -->
       <div v-else-if="currentStep === 3" class="step-content">
-        <div class="step-icon"><CheckCircle2 :size="32" /></div>
-        <h3>{{ t('auth.step3Title') }}</h3>
-        <p>{{ t('auth.step3Desc') }}</p>
+        <div class="step-intro">
+          <ShieldCheck :size="28" class="icon-accent" />
+          <div>
+            <h3>{{ t('auth.codeTitle') }}</h3>
+            <p>{{ t('auth.codeText', { phone: phoneNumber }) }}</p>
+          </div>
+        </div>
+
+        <div
+          v-if="errorMessage"
+          class="auth-alert danger"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertCircle :size="18" class="alert-icon" />
+          <span>{{ errorMessage }}</span>
+        </div>
 
         <div class="form-group">
           <label>{{ t('auth.codeLabel') }}</label>
           <input
             v-model="code"
             type="text"
-            placeholder="12345"
-            maxlength="5"
-            :disabled="loading"
+            :placeholder="t('auth.codePlaceholder')"
+            maxlength="6"
+            class="code-input"
             @keyup.enter="verifyCode"
           />
         </div>
 
-        <div class="btn-group">
-          <button class="secondary-button" :disabled="loading" @click="goBack">
-            <ArrowLeft :size="18" />
-            <span>{{ t('auth.back') }}</span>
+        <div class="button-group">
+          <button
+            class="auth-button secondary btn-back"
+            :disabled="loading"
+            @click="goBack"
+          >
+            <ArrowLeft :size="16" />
+            <span>{{ t('common.back') }}</span>
           </button>
           <button
-            class="primary-button action-btn"
+            class="auth-button primary"
             :disabled="loading"
             @click="verifyCode"
           >
             <Loader2 v-if="loading" class="spin" :size="18" />
-            <span v-else>{{ t('auth.verifyCode') }}</span>
-            <ArrowRight v-if="!loading" :size="18" />
+            <template v-else>
+              <span>{{ t('auth.verify') }}</span>
+              <ArrowRight :size="18" />
+            </template>
           </button>
         </div>
       </div>
 
       <!-- Step 4: 2FA Password -->
       <div v-else-if="currentStep === 4" class="step-content">
-        <div class="step-icon"><ShieldCheck :size="32" /></div>
-        <h3>{{ t('auth.step4Title') }}</h3>
-        <p>{{ t('auth.step4Desc') }}</p>
+        <div class="step-intro">
+          <ShieldCheck :size="28" class="icon-amber" />
+          <div>
+            <h3>{{ t('auth.tfaTitle') }}</h3>
+            <p>{{ t('auth.tfaText') }}</p>
+          </div>
+        </div>
+
+        <div
+          v-if="errorMessage"
+          class="auth-alert danger"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertCircle :size="18" class="alert-icon" />
+          <span>{{ errorMessage }}</span>
+        </div>
 
         <div class="form-group">
-          <label>{{ t('auth.passwordLabel') }}</label>
+          <label>{{ t('auth.tfaLabel') }}</label>
           <input
             v-model="password"
             type="password"
-            placeholder="Password"
-            :disabled="loading"
-            @keyup.enter="submit2FA"
+            :placeholder="t('auth.tfaPlaceholder')"
+            @keyup.enter="verify2FA"
           />
+          <div
+            v-if="insecureTransport"
+            class="auth-alert danger"
+            role="alert"
+            aria-live="polite"
+          >
+            <AlertCircle :size="18" class="alert-icon" />
+            <span>{{ t('auth.tfaHttpWarning') }}</span>
+          </div>
         </div>
 
-        <div class="btn-group">
-          <button class="secondary-button" :disabled="loading" @click="goBack">
-            <ArrowLeft :size="18" />
-            <span>{{ t('auth.back') }}</span>
+        <div class="button-group">
+          <button
+            class="auth-button secondary btn-back"
+            :disabled="loading"
+            @click="goBack"
+          >
+            <ArrowLeft :size="16" />
+            <span>{{ t('common.back') }}</span>
           </button>
           <button
-            class="primary-button action-btn"
+            class="auth-button primary"
             :disabled="loading"
-            @click="submit2FA"
+            @click="verify2FA"
           >
             <Loader2 v-if="loading" class="spin" :size="18" />
-            <span v-else>{{ t('auth.unlock2FA') }}</span>
-            <ArrowRight v-if="!loading" :size="18" />
+            <template v-else>
+              <span>{{ t('auth.signIn') }}</span>
+              <ArrowRight :size="18" />
+            </template>
           </button>
         </div>
+        <small class="help-text back-note">
+          {{ t('auth.backNote') }}
+        </small>
+      </div>
+
+      <!-- Step 5: Éxito -->
+      <div v-else-if="currentStep === 5" class="step-content text-center">
+        <div class="success-icon">
+          <CheckCircle2 :size="48" />
+        </div>
+        <h3>{{ t('auth.successTitle') }}</h3>
+        <p v-if="authStatus.user">
+          {{ t('auth.connectedAs') }}
+          <strong>{{ authStatus.user.first_name }}</strong>
+          <span v-if="authStatus.user.username"
+            >(@{{ authStatus.user.username }})</span
+          >
+        </p>
+        <p v-else>{{ t('auth.successFallback') }}</p>
+
+        <button
+          class="auth-button primary full-width"
+          @click="
+            $emit('auth-success', {
+              ...authStatus,
+              authenticated: true,
+              state: 'LOGGED_IN'
+            })
+          "
+        >
+          <span>{{ t('auth.goDashboard') }}</span>
+          <ArrowRight :size="18" />
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.auth-wrapper {
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--user-bg-base, #07111f), transparent 8%);
+  backdrop-filter: blur(12px);
   display: grid;
   place-items: center;
-  min-height: 80vh;
   padding: 20px;
 }
 
 .auth-card {
+  width: min(520px, 92vw);
   background: var(--user-surface, #0b1a2a);
   border: 1px solid var(--user-border, #1b344b);
   border-radius: 20px;
-  width: 100%;
-  max-width: 480px;
-  padding: 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  padding: 30px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  animation: modalRise 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 .auth-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--user-border, #1b344b);
-  padding-bottom: 16px;
+}
+
+.auth-title-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.lang-switch-toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.lang-switch-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.lang-switch-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 64px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 2px;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.lang-switch-label {
+  flex: 1;
+  text-align: center;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.25s ease;
+  line-height: 22px;
+}
+
+.lang-switch-label.active {
+  color: #000000;
+  font-weight: 800;
+}
+
+.lang-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 28px;
+  height: 22px;
+  background: #ffffff;
+  border-radius: 11px;
+  z-index: 1;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.lang-switch-toggle input:checked + .lang-switch-track .lang-switch-thumb {
+  transform: translateX(30px);
+}
+
+.lang-switch-toggle:hover .lang-switch-track {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.lang-switch-toggle input:focus-visible + .lang-switch-track {
+  outline: 2px solid var(--user-primary, #38a7ff);
+  outline-offset: 2px;
+}
+
+.auth-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #38a7ff, #0077ff);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 15px rgba(56, 167, 255, 0.4);
 }
 
 .auth-header h2 {
-  margin: 0;
-  font-size: 20px;
-  color: #f3f8ff;
   font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f7ff;
+  margin: 0;
 }
 
-.step-indicator {
+.auth-header p {
+  font-size: 13px;
+  color: #7d96b0;
+  margin: 2px 0 0;
+}
+
+/* Stepper */
+.stepper {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+  padding: 10px 0;
+  border-bottom: 1px solid #162f47;
+  gap: 4px;
 }
 
-.step-indicator span {
-  width: 26px;
-  height: 26px;
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.45;
+  transition: opacity 0.3s;
+  flex-shrink: 0;
+}
+
+.step-item.active,
+.step-item.done {
+  opacity: 1;
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--user-surface-light, #0e2032);
+  background: var(--user-bg-base, #07111f);
   color: var(--user-text-dim, #728ba2);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   display: grid;
   place-items: center;
-
-  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.step-indicator span.active {
+.step-item.active .step-num {
   background: var(--user-primary, #38a7ff);
   color: var(--user-bg-base, #07111f);
-  box-shadow: 0 0 12px var(--user-glow);
 }
 
-.error-banner {
-  background: rgba(255, 77, 77, 0.1);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  color: #ffadad;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
+.step-item.done .step-num {
+  background: #39db9a;
+  color: #061425;
 }
 
+.step-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #dbe7f5;
+  white-space: nowrap;
+}
+
+.step-divider {
+  flex: 1;
+  min-width: 6px;
+  height: 2px;
+  background: var(--user-border, #1b344b);
+  margin: 0 4px;
+}
+
+/* Step Content */
 .step-content {
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
 
-.step-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: var(--user-icon-bg, #11385b);
-  color: var(--user-primary, #38a7ff);
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
+.step-intro {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
 }
 
-.step-content h3 {
-  margin: 0 0 6px;
-  color: #f1f7ff;
-  font-size: 18px;
+.icon-accent {
+  color: #42aefa;
+}
+.icon-amber {
+  color: #ffc764;
+}
+
+.step-intro h3 {
   font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  color: #f1f7ff;
+  margin: 0 0 4px;
 }
 
-.step-content p {
-  margin: 0 0 20px;
-  color: var(--user-text-dim, #728ba2);
-  font-size: 13px;
-  line-height: 1.5;
+.step-intro p {
+  font-size: 12px;
+  color: #839bb3;
+  margin: 0;
+  line-height: 1.4;
 }
 
-.my-telegram-banner {
+.info-banner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
   background: var(--user-surface-light, #0e2032);
-  border: 1px solid var(--user-border-light, #234765);
+  border: 1px solid var(--user-border, #1b344b);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 12px;
-  margin-bottom: 18px;
+  color: var(--user-text-dim, #728ba2);
+}
 
-  color: #dbe7f5;
+.info-banner a {
+  color: var(--user-accent, #38a7ff);
+  text-decoration: underline;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: 6px;
 }
 
 .form-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #dbe7f5;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #7f99b3;
+  text-transform: uppercase;
 }
 
 .form-group input {
   background: var(--user-bg-base, #07111f);
-  border: 1px solid var(--user-border-light, #234765);
-  color: #dbe7f5;
+  border: 1px solid var(--user-border, #1b344b);
   border-radius: 10px;
   padding: 12px 14px;
-  outline: none;
+  color: #dbe7f5;
   font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .form-group input:focus {
@@ -515,34 +908,117 @@ const goBack = () => {
   box-shadow: 0 0 0 3px var(--user-glow);
 }
 
-.action-btn {
-  width: 100%;
-  justify-content: center;
-  padding: 12px;
-  margin-top: 8px;
+.code-input {
+  letter-spacing: 6px;
+  font-size: 20px !important;
+  font-weight: 700;
+  text-align: center;
 }
 
-.btn-group {
+.help-text {
+  font-size: 11px;
+  color: #607991;
+  margin-top: 2px;
+}
+
+.auth-alert {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
-.secondary-button {
-  border: 1px solid var(--user-border-light, #234765);
-  background: var(--user-surface-light, #0e2032);
-  color: #dbe7f5;
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
+.auth-alert .alert-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.auth-alert.danger {
+  background: #3d171d;
+  border: 1px solid #732a36;
+  color: #ff9e9e;
+}
+
+/* Buttons */
+.auth-button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
 }
 
-.secondary-button:hover:not(:disabled) {
-  background: var(--user-border, #1b344b);
+.auth-button.primary {
+  background: var(--user-gradient, linear-gradient(135deg, #38a7ff, #0077ff));
+  color: var(--user-bg-base, #07111f);
+}
+
+.auth-button.primary:hover:not(:disabled) {
+  background: #50b3ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(56, 167, 255, 0.35);
+}
+
+.auth-button.secondary {
+  background: var(--user-surface-light, #0e2032);
+  color: var(--user-text-dim, #728ba2);
+  border: 1px solid var(--user-border, #1b344b);
+}
+
+.auth-button.secondary:hover:not(:disabled) {
+  background: #1b3854;
+  color: #dbe7f5;
+}
+
+.auth-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.button-group .auth-button {
+  flex: 1;
+}
+
+.button-group .btn-back {
+  flex: 0 0 auto;
+  padding: 13px 16px;
+}
+
+.back-note {
+  margin-top: -8px;
+  text-align: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.success-icon {
+  color: #39db9a;
+  display: grid;
+  place-items: center;
+  margin-bottom: 8px;
+}
+
+.full-width {
+  width: 100%;
 }
 
 .spin {
@@ -550,8 +1026,22 @@ const goBack = () => {
 }
 
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes modalRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 </style>

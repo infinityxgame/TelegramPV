@@ -35,6 +35,21 @@ func NewServer(cm *telegram.ClientManager, st *storage.Storage, assets fs.FS) *S
 	}
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-TGDL-Request")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *Server) Start(host string, port int) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -51,7 +66,9 @@ func (s *Server) Start(host string, port int) (string, error) {
 	mux.HandleFunc("/api/auth/credentials", s.handleSaveCredentials)
 	mux.HandleFunc("/api/auth/send-code", s.handleSendCode)
 	mux.HandleFunc("/api/auth/sign-in", s.handleSignIn)
+	mux.HandleFunc("/api/auth/verify-code", s.handleSignIn)
 	mux.HandleFunc("/api/auth/2fa", s.handleTwoFactor)
+	mux.HandleFunc("/api/auth/verify-2fa", s.handleTwoFactor)
 	mux.HandleFunc("/api/auth/logout", s.handleLogout)
 
 	mux.HandleFunc("/api/chats", s.handleGetChats)
@@ -97,7 +114,7 @@ func (s *Server) Start(host string, port int) (string, error) {
 	config.SetServerBinding(host, realPort)
 
 	s.httpSrv = &http.Server{
-		Handler: mux,
+		Handler: corsMiddleware(mux),
 	}
 
 	go func() {
@@ -195,25 +212,31 @@ func (s *Server) handleSendCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Phone string `json:"phone"`
+		Phone       string `json:"phone"`
+		PhoneNumber string `json:"phone_number"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, "Invalid request JSON")
 		return
 	}
 
-	if strings.TrimSpace(req.Phone) == "" {
+	phone := strings.TrimSpace(req.Phone)
+	if phone == "" {
+		phone = strings.TrimSpace(req.PhoneNumber)
+	}
+
+	if phone == "" {
 		jsonError(w, http.StatusBadRequest, "Phone number is required")
 		return
 	}
 
-	phoneHash, err := s.clientMgr.SendCode(r.Context(), req.Phone)
+	phoneHash, err := s.clientMgr.SendCode(r.Context(), phone)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	_ = s.storage.SaveConfigKey("phone", req.Phone)
+	_ = s.storage.SaveConfigKey("phone", phone)
 
 	jsonResponse(w, http.StatusOK, map[string]interface{}{
 		"success":         true,
@@ -229,6 +252,7 @@ func (s *Server) handleSignIn(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		Phone         string `json:"phone"`
+		PhoneNumber   string `json:"phone_number"`
 		Code          string `json:"code"`
 		PhoneCodeHash string `json:"phone_code_hash"`
 	}
@@ -237,7 +261,12 @@ func (s *Server) handleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	state, err := s.clientMgr.VerifyCode(r.Context(), req.Phone, req.Code, req.PhoneCodeHash)
+	phone := strings.TrimSpace(req.Phone)
+	if phone == "" {
+		phone = strings.TrimSpace(req.PhoneNumber)
+	}
+
+	state, err := s.clientMgr.VerifyCode(r.Context(), phone, req.Code, req.PhoneCodeHash)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
 		return
