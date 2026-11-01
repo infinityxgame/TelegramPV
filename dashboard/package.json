@@ -1,0 +1,31 @@
+{
+  "name": "telegrampv-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write src eslint.config.mjs vite.config.js prettier.config.js",
+    "format:check": "prettier --check src eslint.config.mjs vite.config.js prettier.config.js"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "^4.3.2",
+    "@hugeicons/vue": "^1.0.8",
+    "lucide-vue-next": "^0.577.0",
+    "vue": "^3.5.18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-vue": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "vite": "^7.1.3"
+  }
+}

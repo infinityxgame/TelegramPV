@@ -1,0 +1,4405 @@
+/* =============================================================================
+   Temas especiales del panel
+   -----------------------------------------------------------------------------
+   Los colores 0-15 son los de Telegram Premium: el panel los toma de la cuenta
+   con la que se inicia sesión y solo cambian variables de color. Del 16 en
+   adelante hay paletas propias, y esas sí pueden traer decorado: fondo, capas
+   animadas y detalles que los temas de Telegram no tienen.
+
+   Cada tema vive entero dentro de su propia clase (.theme-twilight-comet,
+   .theme-edge-runner, .theme-rainy-garden), que App.vue pone y quita en el
+   <html> al aplicar el tema. Con un color de Telegram seleccionado no hay ni
+   una regla activa de
+   este archivo, así que el panel de siempre se comporta exactamente igual que
+   antes de que existiera.
+
+   Para añadir otro tema especial: una paleta nueva en el themeMap de
+   src/utils/theme.js y en public/theme-init.js (el que precarga el <head>),
+   su clase en `specialThemeClasses` (en ambos archivos) y un bloque aquí.
+   La vista de Ajustes no hay que tocarla: saca sola los ids 16+ del themeMap.
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+   Twilight Comet (color 16)
+   Un cielo de atardecer entrando en la noche: resplandor del horizonte abajo,
+   estrellas, un cometa que cruza de vez en cuando y un cordón carmesí atando
+   las piezas que marcan avance o selección.
+   -------------------------------------------------------------------------- */
+.theme-twilight-comet {
+  /* El carmesí del cordón es el único color que no sale del themeMap: es el
+     punto fijo del tema y no cambia aunque cambie la paleta. */
+  --tc-ribbon: #c9372c;
+  --tc-ribbon-light: #e0574a;
+  --tc-comet: #bdeaff;
+  --tc-comet-trail: #7fd4f5;
+  --tc-gold: #f7c56b;
+  --tc-horizon: #f0803c;
+}
+
+/* --- El cielo ------------------------------------------------------------- */
+
+.theme-twilight-comet body {
+  background-image:
+    /* último resplandor del sol, abajo a la derecha */
+    radial-gradient(
+      120% 70% at 78% 118%,
+      color-mix(in srgb, var(--tc-horizon), transparent 82%) 0%,
+      transparent 60%
+    ),
+    /* la franja magenta del atardecer */
+    radial-gradient(
+        100% 60% at 20% 105%,
+        color-mix(in srgb, var(--user-primary), transparent 84%) 0%,
+        transparent 62%
+      ),
+    /* la noche que ya viene por arriba */
+    radial-gradient(
+        circle at 70% -12%,
+        var(--user-bg-top) 0,
+        var(--user-bg-base) 46%
+      );
+  background-attachment: fixed;
+}
+
+/* Estrellas: radial-gradients dentro de un mosaico que se repite, no una
+   imagen. Dos baldosas de tamaños distintos (620px y 410px) cubren la pantalla
+   sin que se note la repetición y pesan cero bytes. Cada una parpadea a su
+   ritmo, lo que da algo de profundidad. */
+.theme-twilight-comet body::before,
+.theme-twilight-comet .app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.theme-twilight-comet body::before {
+  background-image:
+    radial-gradient(
+      1.7px 1.7px at 12% 18%,
+      rgba(255, 255, 255, 0.95),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 34% 9%,
+      rgba(255, 255, 255, 0.7),
+      transparent 62%
+    ),
+    radial-gradient(2px 2px at 57% 24%, var(--tc-comet), transparent 62%),
+    radial-gradient(
+      1.1px 1.1px at 73% 12%,
+      rgba(255, 255, 255, 0.75),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.5px 1.5px at 88% 31%,
+      rgba(255, 255, 255, 0.8),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 21% 41%,
+      rgba(255, 255, 255, 0.6),
+      transparent 62%
+    ),
+    radial-gradient(1.9px 1.9px at 46% 52%, var(--tc-gold), transparent 62%),
+    radial-gradient(
+      1.1px 1.1px at 66% 44%,
+      rgba(255, 255, 255, 0.55),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.4px 1.4px at 93% 57%,
+      rgba(255, 255, 255, 0.65),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.6px 1.6px at 8% 63%,
+      rgba(255, 255, 255, 0.6),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 39% 73%,
+      rgba(255, 255, 255, 0.5),
+      transparent 62%
+    ),
+    radial-gradient(1.5px 1.5px at 80% 77%, var(--tc-comet), transparent 62%),
+    radial-gradient(
+      1.3px 1.3px at 28% 88%,
+      rgba(255, 255, 255, 0.55),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.1px 1.1px at 61% 95%,
+      rgba(255, 255, 255, 0.45),
+      transparent 62%
+    );
+  background-size: 620px 620px;
+  opacity: 0.75;
+  animation: tcBlink 7s ease-in-out infinite;
+}
+
+/* Segunda baldosa: estrellas más pequeñas y tenues, el fondo del cielo. */
+.theme-twilight-comet .app-shell::before {
+  background-image:
+    radial-gradient(
+      1.1px 1.1px at 18% 27%,
+      rgba(255, 255, 255, 0.55),
+      transparent 62%
+    ),
+    radial-gradient(
+      0.9px 0.9px at 47% 14%,
+      rgba(255, 255, 255, 0.45),
+      transparent 62%
+    ),
+    radial-gradient(1.2px 1.2px at 71% 36%, var(--tc-gold), transparent 62%),
+    radial-gradient(
+      0.9px 0.9px at 85% 19%,
+      rgba(255, 255, 255, 0.4),
+      transparent 62%
+    ),
+    radial-gradient(
+      1px 1px at 31% 58%,
+      rgba(255, 255, 255, 0.5),
+      transparent 62%
+    ),
+    radial-gradient(
+      1.1px 1.1px at 63% 69%,
+      rgba(255, 255, 255, 0.42),
+      transparent 62%
+    ),
+    radial-gradient(
+      0.9px 0.9px at 9% 82%,
+      rgba(255, 255, 255, 0.38),
+      transparent 62%
+    ),
+    radial-gradient(1.2px 1.2px at 89% 86%, var(--tc-comet), transparent 62%);
+  background-size: 410px 410px;
+  opacity: 0.5;
+  animation: tcBlink 11s ease-in-out infinite reverse;
+}
+
+/* El cometa cruza la ventana cada 45 segundos y tarda unos cinco en pasar. Va
+   POR ENCIMA del contenido a propósito (z-index alto, por debajo de los
+   avisos): detrás de los paneles no se vería, y a media opacidad se lee como
+   un reflejo sobre el cristal y no como un elemento de la interfaz. Se mueve
+   con transform, así que lo resuelve la GPU sin repintar la página. */
+.theme-twilight-comet body::after {
+  content: '';
+  position: fixed;
+  top: -16vh;
+  left: -26vw;
+  width: 42vw;
+  height: 2px;
+  z-index: 300;
+  pointer-events: none;
+  transform-origin: 0 50%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--tc-comet-trail), transparent 78%) 38%,
+    var(--tc-comet) 93%,
+    #fff 100%
+  );
+  filter: drop-shadow(0 0 8px var(--tc-comet))
+    drop-shadow(0 0 22px var(--tc-comet-trail)) blur(0.4px);
+  opacity: 0;
+  animation: tcComet 45s linear infinite;
+}
+
+/* El contenido va por encima del cielo. La barra lateral ya tiene z-index 100. */
+.theme-twilight-comet .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes tcBlink {
+  0%,
+  100% {
+    opacity: 0.42;
+  }
+  50% {
+    opacity: 0.68;
+  }
+}
+
+/* El giro va DENTRO de transform, no en la propiedad `rotate`: por separado el
+   navegador aplica la rotación por fuera de la traslación y el trazo se sale
+   por abajo en vez de cruzar. El ángulo es el de la propia trayectoria, para
+   que el cometa apunte a donde va. */
+@keyframes tcComet {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(23deg) scaleX(0.3);
+    opacity: 0;
+  }
+  2% {
+    opacity: 0.5;
+  }
+  8% {
+    opacity: 0.46;
+  }
+  12% {
+    transform: translate3d(150vw, 95vh, 0) rotate(23deg) scaleX(1);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(150vw, 95vh, 0) rotate(23deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* Con `prefers-reduced-motion` el cielo se queda quieto: las estrellas siguen
+   ahí, el parpadeo y el cometa no. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-twilight-comet body::before,
+  .theme-twilight-comet .app-shell::before {
+    animation: none;
+  }
+  .theme-twilight-comet body::after {
+    display: none;
+  }
+  .theme-twilight-comet .hero-card:after {
+    animation: none;
+  }
+  .theme-twilight-comet .progress-fill::before,
+  .theme-twilight-comet .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- Cristal -------------------------------------------------------------- */
+/* Los paneles dejan de ser cajas opacas para que el cielo se vea detrás. El
+   desenfoque es lo que evita que las estrellas molesten al leer. */
+
+.theme-twilight-comet .sidebar {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 22%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid
+    color-mix(in srgb, var(--user-border-light), transparent 40%);
+}
+
+.theme-twilight-comet .panel,
+.theme-twilight-comet .stat-card,
+.theme-twilight-comet .hero-card {
+  background-color: color-mix(in srgb, var(--user-surface), transparent 14%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* La tarjeta grande es el trozo de cielo más literal del panel: va de la noche
+   (arriba izquierda) al naranja del horizonte (abajo derecha). */
+.theme-twilight-comet .hero-card {
+  background-image:
+    radial-gradient(
+      90% 120% at 100% 130%,
+      color-mix(in srgb, var(--tc-horizon), transparent 80%) 0%,
+      transparent 58%
+    ),
+    linear-gradient(
+      118deg,
+      var(--user-surface-light) 0%,
+      var(--user-surface) 64%
+    );
+  border-color: color-mix(in srgb, var(--user-border-light), transparent 25%);
+}
+
+/* El halo de la esquina pasa a ser un sol poniente en vez de una mancha. */
+.theme-twilight-comet .hero-card:after {
+  background: radial-gradient(
+    circle,
+    var(--tc-gold) 0%,
+    color-mix(in srgb, var(--tc-horizon), transparent 45%) 38%,
+    transparent 70%
+  );
+  opacity: 0.3;
+  filter: blur(14px);
+  animation: tcSun 9s ease-in-out infinite;
+}
+
+@keyframes tcSun {
+  0%,
+  100% {
+    opacity: 0.24;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.38;
+    transform: scale(1.07);
+  }
+}
+
+/* --- Tipografía ----------------------------------------------------------- */
+/* El tema NO cambia de fuente: usa la misma que el resto de los colores, para
+   que cambiar de tema no mueva el texto de sitio. Lo único que se toca es el
+   tono del título de la vista, un poco más claro sobre el cielo violeta. */
+
+.theme-twilight-comet .topbar h1 {
+  color: #f6f0fa;
+}
+
+/* --- El cordón carmesí ---------------------------------------------------- */
+/* Ata las piezas que indican avance o selección: barras de progreso y pestaña
+   activa. */
+
+/* Trenzado: un degradado repetido en diagonal sobre el color del tema da la
+   textura del cordón sin necesidad de una imagen. */
+.theme-twilight-comet .progress-fill,
+.theme-twilight-comet .disk-bar .fill,
+.theme-twilight-comet .update-progress-fill {
+  background-image: var(--user-gradient);
+  box-shadow: 0 0 12px var(--user-glow);
+}
+
+/* El trenzado va en una capa aparte y se mueve con transform, no con
+   background-position.
+   El porqué: la animación original (progressSheen, en style.css) desplaza el
+   fondo un 200% del ANCHO de la barra en 2,3 s. Con la barra corta eso son
+   unas decenas de pixeles por segundo y el avance se ve bien; según la
+   descarga progresa y la barra se alarga, el mismo 200% pasa a ser de cientos
+   de pixeles por segundo, las rayas se emborronan y parece que la animación
+   se apaga. Aquí el recorrido es fijo —dos periodos del trazado—, así que el
+   cordón avanza al mismo ritmo con la barra al 5% que al 95%. */
+.theme-twilight-comet .progress-fill,
+.theme-twilight-comet .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-twilight-comet .progress-fill::before,
+.theme-twilight-comet .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  /* Sobra por la derecha: es lo que se desplaza, y sin ello quedaría un hueco
+     al final de cada vuelta. */
+  right: -24px;
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.22) 0 4px,
+    rgba(0, 0, 0, 0.1) 4px 9px
+  );
+  animation: tcRibbonAdvance 1.2s linear infinite;
+}
+
+/* 19.86px son dos periodos horizontales del trazado: el periodo del degradado
+   es de 9px medidos sobre su propio eje, y a 115deg eso son 9 / sin(115deg) =
+   9.93px en horizontal. Al desplazarse un múltiplo exacto, el salto del final
+   del bucle cae justo encima del patrón y no se ve. */
+@keyframes tcRibbonAdvance {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-19.86px);
+  }
+}
+
+/* La barra del diálogo de actualización ya trae su propia animación de viento
+   dentro, así que ahí el trenzado se queda quieto, de fondo, y no se le añade
+   el recorte que necesitaría la capa móvil. */
+.theme-twilight-comet .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.22) 0 4px,
+      rgba(0, 0, 0, 0.1) 4px 9px
+    ),
+    var(--user-gradient);
+}
+
+.theme-twilight-comet .progress-track {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 30%);
+}
+
+/* La pestaña seleccionada lleva el carmesí al borde, no el color del tema: es
+   el punto fijo de la interfaz. */
+.theme-twilight-comet .sidebar-nav button {
+  position: relative;
+}
+.theme-twilight-comet .sidebar-nav button.selected {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  background: color-mix(in srgb, var(--tc-ribbon), transparent 84%) !important;
+}
+.theme-twilight-comet .sidebar-nav button.selected::before {
+  background-color: var(--tc-ribbon);
+}
+.theme-twilight-comet .sidebar-nav button.selected::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tc-ribbon-light);
+  box-shadow: 0 0 8px var(--tc-ribbon);
+}
+
+/* Los enlaces de ayuda ya eran de un rojo fijo: se alinean con el cordón. */
+.theme-twilight-comet .inline-link,
+.theme-twilight-comet .inline-link:visited {
+  color: var(--tc-ribbon-light);
+}
+.theme-twilight-comet .inline-link:hover {
+  color: #ff7a6d;
+}
+.theme-twilight-comet .inline-link:focus-visible {
+  outline-color: var(--tc-ribbon-light);
+}
+
+/* --- Detalles ------------------------------------------------------------- */
+
+/* Los cuatro iconos de estadísticas tienen colores fijos que no pegan con el
+   cielo; pasan a los tonos del tema. */
+.theme-twilight-comet .stat-icon.blue {
+  background: color-mix(in srgb, var(--user-icon-bg), transparent 10%);
+  color: var(--user-accent);
+}
+.theme-twilight-comet .stat-icon.amber {
+  background: rgba(240, 128, 60, 0.16);
+  color: var(--tc-gold);
+}
+.theme-twilight-comet .stat-icon.green {
+  background: rgba(53, 163, 181, 0.16);
+  color: #7ed3de;
+}
+.theme-twilight-comet .stat-icon.gray {
+  background: rgba(144, 134, 187, 0.14);
+  color: #a79ccb;
+}
+
+.theme-twilight-comet .primary-button,
+.theme-twilight-comet .save-button {
+  color: #fff8ef;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--user-glow), transparent 25%);
+}
+.theme-twilight-comet .primary-button:hover:not(:disabled),
+.theme-twilight-comet .save-button:hover:not(:disabled) {
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--tc-horizon), transparent 62%);
+}
+
+/* El verde del punto de estado desentona con el cielo: pasa al oro. El rojo de
+   desconectado se mantiene, que ahí el color es información. */
+.theme-twilight-comet .status-dot,
+.theme-twilight-comet .live-dot {
+  background: var(--tc-gold);
+  box-shadow: 0 0 12px var(--tc-gold);
+}
+.theme-twilight-comet .status-dot.disconnected {
+  background: var(--tc-ribbon);
+  box-shadow: 0 0 12px var(--tc-ribbon);
+}
+.theme-twilight-comet .sidebar-user-badge .user-icon {
+  color: var(--tc-gold);
+}
+
+.theme-twilight-comet .badge,
+.theme-twilight-comet .save-state {
+  background: color-mix(in srgb, var(--tc-gold), transparent 88%);
+  color: var(--tc-gold);
+  border-color: color-mix(in srgb, var(--tc-gold), transparent 80%);
+}
+
+.theme-twilight-comet .toast.success {
+  background: color-mix(in srgb, var(--user-surface), transparent 8%);
+  border-color: color-mix(in srgb, var(--tc-gold), transparent 65%);
+}
+
+/* Barras de desplazamiento del color del tema, no del sistema. */
+.theme-twilight-comet ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.theme-twilight-comet ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.theme-twilight-comet ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--user-border-light), transparent 20%);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.theme-twilight-comet ::-webkit-scrollbar-thumb:hover {
+  background: var(--user-primary);
+  background-clip: content-box;
+}
+
+/* La pantalla de arranque y la de actualización comparten el cielo: sin esto
+   se verían como un rectángulo plano encima del fondo. */
+.theme-twilight-comet .boot-screen,
+.theme-twilight-comet .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 46%
+  );
+}
+
+/* En pantallas estrechas la barra lateral queda arriba: el cordón pasa a ser
+   el borde inferior, y el cielo se calma para no competir con el contenido. */
+@media (max-width: 900px) {
+  .theme-twilight-comet .sidebar {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--tc-ribbon), transparent 70%);
+  }
+  .theme-twilight-comet .sidebar-nav button.selected {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  .theme-twilight-comet .sidebar-nav button.selected::after {
+    display: none;
+  }
+  .theme-twilight-comet body::before {
+    opacity: 0.35;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Edge Runner UI (color 17)
+   Night City: negro casi puro para que el neón pegue fuerte, amarillo ácido
+   como identidad, cian para lo interactivo y magenta reservado para lo que va
+   mal. El decorado es de HUD —rejilla, líneas de barrido, esquinas marcadas—
+   y no de "fondo bonito": nada tapa el contenido ni se mueve donde se lee.
+   -------------------------------------------------------------------------- */
+.theme-edge-runner {
+  /* El magenta no está en el themeMap porque no es un color de interfaz sino
+     de alarma: solo aparece en errores, desconexiones y acciones destructivas. */
+  --er-alert: #ff0055;
+  --er-alert-light: #ff4d7d;
+  --er-lime: #a8f53c;
+}
+
+/* --- El fondo ------------------------------------------------------------- */
+
+.theme-edge-runner body {
+  background-image:
+    /* derrame de neón amarillo desde abajo a la izquierda */
+    radial-gradient(
+      90% 60% at 6% 104%,
+      color-mix(in srgb, var(--user-primary), transparent 92%) 0%,
+      transparent 60%
+    ),
+    /* y de cian desde arriba a la derecha */
+    radial-gradient(
+        80% 55% at 96% -4%,
+        color-mix(in srgb, var(--user-accent), transparent 90%) 0%,
+        transparent 58%
+      ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 46%
+    );
+  background-attachment: fixed;
+}
+
+/* Rejilla técnica de fondo. Va por detrás de todo (z-index -1) y los paneles
+   son opacos, así que solo asoma por los huecos: da la sensación de que la
+   interfaz está montada sobre una cuadrícula, sin estorbar la lectura. */
+.theme-edge-runner body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--user-primary), transparent 94%) 0 1px,
+      transparent 1px 48px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--user-accent), transparent 95%) 0 1px,
+      transparent 1px 48px
+    );
+}
+
+.theme-edge-runner .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+/* Líneas de barrido de monitor viejo, sobre TODO lo demás. La clase está en el
+   <html>, así que este ::before es el del elemento raíz y queda por encima de
+   cualquier cosa de la página. La opacidad es deliberadamente mínima: a 1px de
+   cada 3 y al 4,5% se nota como textura, no como suciedad sobre el texto. */
+.theme-edge-runner::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.045) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Barrido de escáner: una banda que baja por la ventana cada 11 segundos y
+   tarda unos dos en pasar. Como el cometa del otro tema, va por encima del
+   contenido —detrás de los paneles opacos no se vería— y a media opacidad se
+   lee como el refresco de una pantalla, no como un elemento de la interfaz. */
+.theme-edge-runner body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 130px;
+  z-index: 300;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--user-accent), transparent 94%) 60%,
+    color-mix(in srgb, var(--user-accent), transparent 86%) 97%,
+    color-mix(in srgb, var(--user-primary), transparent 45%) 99.3%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation: erSweep 11s linear infinite;
+}
+
+@keyframes erSweep {
+  0% {
+    transform: translateY(-130px);
+    opacity: 0;
+  }
+  2% {
+    opacity: 0.55;
+  }
+  17% {
+    opacity: 0.5;
+  }
+  20% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-edge-runner body::after {
+    display: none;
+  }
+  .theme-edge-runner .progress-fill::before,
+  .theme-edge-runner .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- Paneles y esquinas HUD ----------------------------------------------- */
+/* Nada de cristal aquí: los paneles son chapa opaca sobre negro, que es lo que
+   deja que el neón destaque. Lo que los marca son las esquinas. */
+
+.theme-edge-runner .panel,
+.theme-edge-runner .stat-card,
+.theme-edge-runner .hero-card,
+.theme-edge-runner .logs-hero {
+  background-color: var(--user-surface);
+  border-color: var(--user-border);
+}
+
+.theme-edge-runner .hero-card {
+  background-image: linear-gradient(
+    112deg,
+    var(--user-surface-light) 0%,
+    var(--user-surface) 58%,
+    color-mix(in srgb, var(--user-primary), var(--user-surface) 92%) 100%
+  );
+  border-color: color-mix(in srgb, var(--user-primary), transparent 78%);
+}
+
+/* El halo de la esquina pasa a ser el resplandor de un rótulo de neón. */
+.theme-edge-runner .hero-card:after {
+  background: radial-gradient(circle, var(--user-primary) 0%, transparent 62%);
+  opacity: 0.12;
+  filter: blur(18px);
+}
+
+/* Escuadras en dos esquinas opuestas: amarillo arriba a la izquierda, cian
+   abajo a la derecha. El radio es el mismo del panel (15px) para que la
+   escuadra se pegue a la curva en vez de cruzarla. */
+.theme-edge-runner .panel {
+  position: relative;
+}
+
+.theme-edge-runner .panel::before,
+.theme-edge-runner .panel::after {
+  content: '';
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+}
+
+.theme-edge-runner .panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--user-primary);
+  border-left: 2px solid var(--user-primary);
+  border-top-left-radius: 15px;
+}
+
+.theme-edge-runner .panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--user-accent);
+  border-right: 2px solid var(--user-accent);
+  border-bottom-right-radius: 15px;
+  opacity: 1;
+}
+
+/* Las tarjetas de cifras llevan un filo amarillo a la izquierda en vez de
+   escuadras: son cuatro seguidas y con escuadras quedaría recargado. */
+.theme-edge-runner .stat-card {
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.theme-edge-runner .stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  background-color: var(--user-primary);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--user-primary);
+}
+.theme-edge-runner .stat-card:hover {
+  border-color: var(--user-primary);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--user-primary), transparent 80%),
+    0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* --- Texto ---------------------------------------------------------------- */
+/* Los blancos del panel tiran a azul; sobre negro puro se ven sucios, así que
+   los títulos pasan a blanco y el texto secundario al gris de la paleta. El
+   tema no toca ninguna fuente. */
+
+.theme-edge-runner .brand,
+.theme-edge-runner .hero-card h2,
+.theme-edge-runner .panel-heading h2,
+.theme-edge-runner .logs-hero h2,
+.theme-edge-runner .stat-card strong,
+.theme-edge-runner .sidebar-bottom strong,
+.theme-edge-runner .setting-label,
+.theme-edge-runner .sidebar-user-badge,
+.theme-edge-runner .download-form input,
+.theme-edge-runner .speed-row input,
+.theme-edge-runner .token-row input {
+  color: #fff;
+}
+
+.theme-edge-runner .empty-state p,
+.theme-edge-runner .sidebar-status {
+  color: var(--user-text-dim);
+}
+
+/* Aberración cromática en el título de la vista: el desdoble cian/magenta de
+   una señal mal sincronizada. Fija, no animada: un título que tiembla mientras
+   se lee cansa. */
+.theme-edge-runner .topbar h1 {
+  color: #fff;
+  text-shadow:
+    1.5px 0 0 color-mix(in srgb, var(--er-alert), transparent 58%),
+    -1.5px 0 0 color-mix(in srgb, var(--user-accent), transparent 58%);
+}
+
+/* --- Navegación ----------------------------------------------------------- */
+
+.theme-edge-runner .sidebar {
+  background: var(--user-bg-base);
+  border-right: 1px solid
+    color-mix(in srgb, var(--user-primary), transparent 88%);
+}
+
+.theme-edge-runner .sidebar-nav button:hover {
+  color: var(--user-accent);
+  background: color-mix(in srgb, var(--user-accent), transparent 94%);
+}
+
+.theme-edge-runner .sidebar-nav button.selected {
+  color: var(--user-primary);
+  background: color-mix(
+    in srgb,
+    var(--user-primary),
+    transparent 88%
+  ) !important;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--user-primary), transparent 85%);
+}
+.theme-edge-runner .sidebar-nav button.selected::before {
+  background-color: var(--user-primary);
+  box-shadow: 0 0 8px var(--user-primary);
+}
+.theme-edge-runner .sidebar-nav button.selected span {
+  color: var(--user-primary);
+}
+
+@media (max-width: 900px) {
+  .theme-edge-runner .sidebar-nav button.selected {
+    box-shadow: 0 0 16px
+      color-mix(in srgb, var(--user-primary), transparent 85%);
+  }
+}
+
+/* --- Barras de progreso --------------------------------------------------- */
+/* Segmentos de datos corriendo hacia delante. Misma técnica que el otro tema:
+   capa propia movida con transform y recorrido fijo, para que el avance se vea
+   igual con la barra corta que con la barra llena (el progressSheen original
+   escala con el ancho y a barra larga se emborrona). Aquí el patrón es
+   vertical, así que el periodo horizontal son los 10px exactos del degradado y
+   el recorrido, 20px, son dos periodos justos. */
+
+.theme-edge-runner .progress-fill,
+.theme-edge-runner .disk-bar .fill,
+.theme-edge-runner .update-progress-fill {
+  background-image: var(--user-gradient);
+  box-shadow:
+    inset -2px 0 0 rgba(255, 255, 255, 0.9),
+    0 0 10px var(--user-glow),
+    0 0 22px color-mix(in srgb, var(--user-primary), transparent 80%);
+}
+
+.theme-edge-runner .progress-track {
+  background: var(--user-bg-base);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--user-accent), transparent 90%);
+}
+
+.theme-edge-runner .progress-fill,
+.theme-edge-runner .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-edge-runner .progress-fill::before,
+.theme-edge-runner .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  /* Sobra por la izquierda, que es de donde viene el recorrido. */
+  left: -24px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(10, 10, 12, 0.55) 0 3px,
+    transparent 3px 10px
+  );
+  animation: erSegments 1.1s linear infinite;
+}
+
+@keyframes erSegments {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(20px);
+  }
+}
+
+/* La barra del diálogo de actualización ya trae su propia animación dentro, así
+   que ahí los segmentos se quedan quietos, de fondo. */
+.theme-edge-runner .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(10, 10, 12, 0.55) 0 3px,
+      transparent 3px 10px
+    ),
+    var(--user-gradient);
+}
+
+/* --- Estados y alertas ---------------------------------------------------- */
+
+/* El interruptor encendido. El panel pinta el botón de blanco sobre la pista
+   del color de acento, y aquí la pista es amarillo neón: blanco sobre amarillo
+   claro no se distingue y el interruptor parece una pastilla lisa. El botón
+   pasa al negro del fondo, que además es el recorte que este tema usa en los
+   botones. */
+.theme-edge-runner .switch input:checked + span:after,
+.theme-edge-runner .chat-name-mode-btn.active .chat-switch-thumb {
+  background: var(--user-bg-base);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.theme-edge-runner .status-dot,
+.theme-edge-runner .live-dot {
+  background: var(--user-primary);
+  box-shadow: 0 0 12px var(--user-primary);
+}
+.theme-edge-runner .status-dot.disconnected {
+  background: var(--er-alert);
+  box-shadow: 0 0 12px var(--er-alert);
+}
+.theme-edge-runner .sidebar-status.is-disconnected {
+  color: var(--er-alert-light);
+  background: color-mix(in srgb, var(--er-alert), transparent 94%);
+  border-color: color-mix(in srgb, var(--er-alert), transparent 86%);
+}
+
+.theme-edge-runner .badge,
+.theme-edge-runner .save-state {
+  background: color-mix(in srgb, var(--user-accent), transparent 90%);
+  color: var(--user-accent);
+  border-color: color-mix(in srgb, var(--user-accent), transparent 80%);
+}
+
+.theme-edge-runner .sidebar-user-badge .user-icon {
+  color: var(--user-accent);
+}
+
+/* Todo lo destructivo o roto, en magenta. */
+.theme-edge-runner .row-side button,
+.theme-edge-runner .delete-button,
+.theme-edge-runner .sidebar-user-badge .logout-btn {
+  color: var(--er-alert-light);
+}
+.theme-edge-runner .row-side button:hover,
+.theme-edge-runner .delete-button:hover,
+.theme-edge-runner .sidebar-user-badge .logout-btn:hover {
+  color: #fff;
+  background: color-mix(in srgb, var(--er-alert), transparent 82%);
+}
+.theme-edge-runner .row-side .pause-action {
+  color: var(--user-primary);
+}
+.theme-edge-runner .row-side .resume-action {
+  color: var(--er-lime);
+}
+
+.theme-edge-runner .toast.danger {
+  background: color-mix(in srgb, var(--er-alert), var(--user-surface) 84%);
+  color: #ffd6e2;
+  border: 1px solid color-mix(in srgb, var(--er-alert), transparent 60%);
+}
+.theme-edge-runner .toast.success {
+  background: var(--user-surface);
+  color: var(--user-primary);
+  border: 1px solid color-mix(in srgb, var(--user-primary), transparent 70%);
+}
+
+.theme-edge-runner .inline-link,
+.theme-edge-runner .inline-link:visited {
+  color: var(--user-accent);
+}
+.theme-edge-runner .inline-link:hover {
+  color: #fff;
+}
+.theme-edge-runner .inline-link:focus-visible {
+  outline-color: var(--user-accent);
+}
+
+/* --- Detalles ------------------------------------------------------------- */
+
+.theme-edge-runner .stat-icon.blue {
+  background: color-mix(in srgb, var(--user-primary), transparent 88%);
+  color: var(--user-primary);
+}
+.theme-edge-runner .stat-icon.amber {
+  background: color-mix(in srgb, var(--user-accent), transparent 88%);
+  color: var(--user-accent);
+}
+.theme-edge-runner .stat-icon.green {
+  background: color-mix(in srgb, var(--er-lime), transparent 88%);
+  color: var(--er-lime);
+}
+.theme-edge-runner .stat-icon.gray {
+  background: color-mix(in srgb, var(--user-text-dim), transparent 90%);
+  color: var(--user-text-dim);
+}
+
+/* Botón principal: rótulo de neón con el texto en negro recortado encima. */
+.theme-edge-runner .primary-button,
+.theme-edge-runner .save-button {
+  color: var(--user-bg-base);
+  font-weight: 700;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--user-primary), transparent 72%);
+}
+.theme-edge-runner .primary-button:hover:not(:disabled),
+.theme-edge-runner .save-button:hover:not(:disabled) {
+  box-shadow: 0 10px 30px
+    color-mix(in srgb, var(--user-accent), transparent 62%);
+}
+
+.theme-edge-runner ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.theme-edge-runner ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.theme-edge-runner ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--user-primary), transparent 60%);
+  border-radius: 0;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.theme-edge-runner ::-webkit-scrollbar-thumb:hover {
+  background: var(--user-primary);
+  background-clip: content-box;
+}
+
+.theme-edge-runner .boot-screen,
+.theme-edge-runner .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 46%
+  );
+}
+
+/* -----------------------------------------------------------------------------
+   Rainy Garden (color 18)
+   El jardín bajo la lluvia: follaje en penumbra, cristal mojado y luz gris de
+   día nublado. Es el más calmado de los tres —nada de neón ni de destellos—
+   y todo el movimiento es la lluvia, que cae detrás y delante del contenido.
+
+   Sobre la paleta: el panel tiene blancos fijos en su CSS (títulos, etiquetas)
+   pensados para fondo oscuro, así que el tema es el jardín al anochecer y no a
+   mediodía: verdes oscuros de fondo, el azul lluvia en bordes y superficies
+   secundarias, y la niebla clara para lo activo y el texto principal, que es
+   justo el reparto de la paleta.
+   -------------------------------------------------------------------------- */
+.theme-rainy-garden {
+  --rg-mist: #e6ecef;
+  --rg-rain: #8fa4b5;
+  --rg-rain-deep: #5c768d;
+  --rg-moss: #2d5a27;
+  --rg-moss-deep: #1e4620;
+}
+
+/* --- El jardín ------------------------------------------------------------ */
+
+.theme-rainy-garden body {
+  background-image:
+    /* follaje desenfocado en las dos esquinas de abajo */
+    radial-gradient(
+      60% 42% at 4% 108%,
+      color-mix(in srgb, var(--rg-moss), transparent 62%) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      52% 38% at 98% 104%,
+      color-mix(in srgb, var(--rg-moss-deep), transparent 58%) 0%,
+      transparent 60%
+    ),
+    /* luz gris de día nublado entrando por arriba */
+    radial-gradient(
+        70% 48% at 62% -10%,
+        color-mix(in srgb, var(--rg-rain), transparent 86%) 0%,
+        transparent 58%
+      ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 48%
+    );
+  background-attachment: fixed;
+}
+
+/* Lluvia. Cada gota es un radial-gradient alargado dentro de un mosaico que se
+   repite; el mosaico entero se mueve con transform, así que la caída es fluida
+   y no cuesta nada. Dos capas: una lejana por detrás del contenido y otra
+   cercana por delante, más rápida y casi transparente. Esa diferencia de
+   velocidad es lo que da la profundidad.
+
+   El giro va dentro del transform y la caída después, para que las gotas bajen
+   por su propio eje inclinado; por eso las capas se extienden un 25% fuera de
+   la pantalla, para que al girar no se vean los bordes. Y el recorrido es
+   exactamente el alto del mosaico, así que el bucle no tiene salto. */
+.theme-rainy-garden body::before,
+.theme-rainy-garden::before {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  pointer-events: none;
+}
+
+/* Lluvia lejana: densa, lenta y por detrás de los paneles. */
+.theme-rainy-garden body::before {
+  z-index: -1;
+  background-image:
+    radial-gradient(
+      1.1px 14px at 12% 20%,
+      color-mix(in srgb, var(--rg-mist), transparent 68%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1px 11px at 37% 62%,
+      color-mix(in srgb, var(--rg-mist), transparent 76%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.2px 16px at 64% 8%,
+      color-mix(in srgb, var(--rg-mist), transparent 72%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1px 12px at 82% 44%,
+      color-mix(in srgb, var(--rg-mist), transparent 80%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.1px 13px at 51% 85%,
+      color-mix(in srgb, var(--rg-mist), transparent 74%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1px 10px at 92% 72%,
+      color-mix(in srgb, var(--rg-mist), transparent 82%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.2px 15px at 26% 47%,
+      color-mix(in srgb, var(--rg-mist), transparent 78%),
+      transparent 70%
+    );
+  background-size: 180px 220px;
+  animation: rgRainFar 1.9s linear infinite;
+}
+
+/* Lluvia cercana: cuatro gotas largas por mosaico, al 12% de opacidad. A ese
+   nivel se percibe el movimiento sin que estorbe para leer lo que hay debajo,
+   que es el único sitio del tema donde algo pasa por encima del texto. */
+.theme-rainy-garden::before {
+  z-index: 400;
+  opacity: 0.12;
+  background-image:
+    radial-gradient(1.5px 28px at 22% 30%, var(--rg-mist), transparent 72%),
+    radial-gradient(1.7px 34px at 68% 70%, var(--rg-mist), transparent 72%),
+    radial-gradient(1.4px 24px at 45% 12%, var(--rg-mist), transparent 72%),
+    radial-gradient(1.5px 30px at 88% 52%, var(--rg-mist), transparent 72%);
+  background-size: 300px 300px;
+  animation: rgRainNear 1.15s linear infinite;
+}
+
+@keyframes rgRainFar {
+  from {
+    transform: rotate(7deg) translateY(0);
+  }
+  to {
+    transform: rotate(7deg) translateY(220px);
+  }
+}
+
+@keyframes rgRainNear {
+  from {
+    transform: rotate(7deg) translateY(0);
+  }
+  to {
+    transform: rotate(7deg) translateY(300px);
+  }
+}
+
+/* El charco: el resplandor del agua acumulada abajo. Va por detrás de todo,
+   así que solo asoma por los huecos del fondo, y respira despacio en vez de
+   quedarse plano. */
+.theme-rainy-garden body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--rg-rain-deep), transparent 80%) 0%,
+    color-mix(in srgb, var(--rg-rain-deep), transparent 92%) 45%,
+    transparent 100%
+  );
+  animation: rgPuddle 9s ease-in-out infinite;
+}
+
+@keyframes rgPuddle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.theme-rainy-garden .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-rainy-garden body::before {
+    animation: none;
+  }
+  .theme-rainy-garden::before {
+    display: none;
+  }
+  .theme-rainy-garden body::after {
+    animation: none;
+  }
+  .theme-rainy-garden .progress-fill::before,
+  .theme-rainy-garden .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- Cristal mojado ------------------------------------------------------- */
+/* Los paneles son la ventana desde la que se mira el jardín: traslúcidos, con
+   bastante desenfoque y una línea de luz en el filo de arriba, que es donde el
+   agua atrapa la claridad. */
+
+.theme-rainy-garden .sidebar {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 18%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right: 1px solid
+    color-mix(in srgb, var(--rg-rain-deep), transparent 55%);
+}
+
+.theme-rainy-garden .panel,
+.theme-rainy-garden .stat-card,
+.theme-rainy-garden .hero-card,
+.theme-rainy-garden .logs-hero {
+  background-color: color-mix(in srgb, var(--user-surface), transparent 12%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: color-mix(in srgb, var(--user-border-light), transparent 52%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--rg-mist), transparent 86%),
+    0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+.theme-rainy-garden .stat-card:hover {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--rg-mist), transparent 78%),
+    0 14px 30px rgba(0, 0, 0, 0.38);
+}
+
+.theme-rainy-garden .hero-card {
+  background-image: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--user-surface-light), transparent 8%) 0%,
+    color-mix(in srgb, var(--user-surface), transparent 10%) 62%,
+    color-mix(in srgb, var(--rg-rain-deep), var(--user-surface) 78%) 100%
+  );
+}
+
+/* El halo de la esquina pasa a ser luz difusa entre la lluvia. */
+.theme-rainy-garden .hero-card:after {
+  background: radial-gradient(circle, var(--rg-mist) 0%, transparent 66%);
+  opacity: 0.1;
+  filter: blur(26px);
+}
+
+/* --- Texto ---------------------------------------------------------------- */
+/* El tema no toca ninguna fuente. Solo los blancos, que en el panel tiran a
+   azul frío y sobre verde se ven morados: pasan a la niebla de la paleta. */
+
+.theme-rainy-garden .topbar h1,
+.theme-rainy-garden .brand,
+.theme-rainy-garden .hero-card h2,
+.theme-rainy-garden .panel-heading h2,
+.theme-rainy-garden .logs-hero h2,
+.theme-rainy-garden .stat-card strong,
+.theme-rainy-garden .sidebar-bottom strong,
+.theme-rainy-garden .setting-label,
+.theme-rainy-garden .sidebar-user-badge,
+.theme-rainy-garden .download-form input,
+.theme-rainy-garden .speed-row input,
+.theme-rainy-garden .token-row input {
+  color: var(--rg-mist);
+}
+
+.theme-rainy-garden .empty-state p {
+  color: color-mix(in srgb, var(--rg-mist), transparent 25%);
+}
+.theme-rainy-garden .sidebar-status {
+  color: var(--rg-rain);
+}
+
+/* --- Navegación ----------------------------------------------------------- */
+
+.theme-rainy-garden .sidebar-nav button:hover {
+  color: var(--rg-mist);
+  background: color-mix(in srgb, var(--rg-rain), transparent 90%);
+}
+
+.theme-rainy-garden .sidebar-nav button.selected {
+  color: var(--rg-mist);
+  background: color-mix(in srgb, var(--rg-moss), transparent 45%) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.theme-rainy-garden .sidebar-nav button.selected::before {
+  background-color: var(--rg-rain);
+}
+.theme-rainy-garden .sidebar-nav button.selected span {
+  color: var(--rg-mist);
+}
+
+@media (max-width: 900px) {
+  .theme-rainy-garden .sidebar-nav button.selected {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* --- Barras de progreso --------------------------------------------------- */
+/* Agua subiendo, con la lluvia rayándola en diagonal. Misma técnica que los
+   otros dos temas: capa propia movida con transform y recorrido fijo, para que
+   el avance se vea igual con la barra corta que con la barra llena.
+   El patrón va a 105° y repite cada 11px sobre su eje, así que en horizontal
+   repite cada 11 / sen(105°) = 11,39px; el recorrido, 22,78px, son dos
+   periodos justos y el salto del bucle no se ve. */
+
+.theme-rainy-garden .progress-fill,
+.theme-rainy-garden .disk-bar .fill,
+.theme-rainy-garden .update-progress-fill {
+  background-image: var(--user-gradient);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--rg-mist), transparent 78%);
+}
+
+.theme-rainy-garden .progress-track {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 25%);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--rg-rain-deep), transparent 72%);
+}
+
+.theme-rainy-garden .progress-fill,
+.theme-rainy-garden .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-rainy-garden .progress-fill::before,
+.theme-rainy-garden .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  /* Sobra por la derecha: es hacia donde se desplaza la capa. */
+  right: -26px;
+  background-image: repeating-linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.26) 0 2px,
+    rgba(92, 118, 141, 0.16) 2px 11px
+  );
+  animation: rgWater 1.5s linear infinite;
+}
+
+@keyframes rgWater {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-22.78px);
+  }
+}
+
+/* La barra del diálogo de actualización ya trae su propia animación dentro,
+   así que ahí el rayado se queda quieto, de fondo. */
+.theme-rainy-garden .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0.26) 0 2px,
+      rgba(92, 118, 141, 0.16) 2px 11px
+    ),
+    var(--user-gradient);
+}
+
+/* --- Estados y detalles --------------------------------------------------- */
+
+/* El interruptor encendido. Aquí la pista es la niebla clara de la paleta, y
+   el botón blanco del panel encima de ella desaparece. El botón pasa al verde
+   hondo del follaje: es el mismo contraste que hay entre el texto y el fondo
+   en el resto del tema. */
+.theme-rainy-garden .switch input:checked + span:after,
+.theme-rainy-garden .chat-name-mode-btn.active .chat-switch-thumb {
+  background: var(--rg-moss-deep);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.theme-rainy-garden .status-dot,
+.theme-rainy-garden .live-dot {
+  background: var(--rg-mist);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--rg-mist), transparent 45%);
+}
+.theme-rainy-garden .status-dot.disconnected {
+  background: #c97a6d;
+  box-shadow: 0 0 12px rgba(201, 122, 109, 0.55);
+}
+.theme-rainy-garden .sidebar-status.is-disconnected {
+  color: #e0a79c;
+  background: rgba(201, 122, 109, 0.08);
+  border-color: rgba(201, 122, 109, 0.18);
+}
+
+.theme-rainy-garden .badge,
+.theme-rainy-garden .save-state {
+  background: color-mix(in srgb, var(--rg-rain), transparent 88%);
+  color: var(--rg-mist);
+  border-color: color-mix(in srgb, var(--rg-rain), transparent 74%);
+}
+
+.theme-rainy-garden .count-pill {
+  color: var(--rg-mist);
+  background: color-mix(in srgb, var(--rg-rain-deep), transparent 70%);
+}
+
+.theme-rainy-garden .sidebar-user-badge .user-icon {
+  color: var(--rg-rain);
+}
+
+.theme-rainy-garden .row-side button,
+.theme-rainy-garden .delete-button,
+.theme-rainy-garden .sidebar-user-badge .logout-btn {
+  color: #d99a8f;
+}
+.theme-rainy-garden .row-side button:hover,
+.theme-rainy-garden .delete-button:hover,
+.theme-rainy-garden .sidebar-user-badge .logout-btn:hover {
+  color: #f2c4bb;
+  background: rgba(201, 122, 109, 0.16);
+}
+.theme-rainy-garden .row-side .pause-action {
+  color: var(--rg-rain);
+}
+.theme-rainy-garden .row-side .resume-action {
+  color: #9ec79a;
+}
+
+.theme-rainy-garden .toast.success {
+  background: color-mix(in srgb, var(--user-surface), transparent 6%);
+  color: var(--rg-mist);
+  border: 1px solid color-mix(in srgb, var(--rg-rain), transparent 62%);
+}
+
+.theme-rainy-garden .exposure-banner {
+  background: color-mix(in srgb, #c97a6d, transparent 82%);
+  border-color: color-mix(in srgb, #c97a6d, transparent 55%);
+  color: #f2c4bb;
+}
+
+.theme-rainy-garden .exposure-banner .banner-icon {
+  color: #f5b96b;
+}
+
+.theme-rainy-garden .inline-link,
+.theme-rainy-garden .inline-link:visited {
+  color: var(--rg-rain);
+}
+.theme-rainy-garden .inline-link:hover {
+  color: var(--rg-mist);
+}
+.theme-rainy-garden .inline-link:focus-visible {
+  outline-color: var(--rg-rain);
+}
+
+/* Los cuatro iconos de cifras, en tonos del jardín en vez de sus colores fijos. */
+.theme-rainy-garden .stat-icon.blue {
+  background: color-mix(in srgb, var(--rg-moss), transparent 55%);
+  color: var(--rg-mist);
+}
+.theme-rainy-garden .stat-icon.amber {
+  background: color-mix(in srgb, var(--rg-rain-deep), transparent 68%);
+  color: var(--rg-rain);
+}
+.theme-rainy-garden .stat-icon.green {
+  background: color-mix(in srgb, var(--rg-moss-deep), transparent 45%);
+  color: #9ec79a;
+}
+.theme-rainy-garden .stat-icon.gray {
+  background: color-mix(in srgb, var(--user-text-dim), transparent 88%);
+  color: var(--user-text-dim);
+}
+
+/* Botón principal: cristal claro sobre el verde, con el texto en el verde
+   hondo del fondo. */
+.theme-rainy-garden .primary-button,
+.theme-rainy-garden .save-button {
+  color: var(--user-bg-base);
+  font-weight: 700;
+}
+.theme-rainy-garden .primary-button:hover:not(:disabled),
+.theme-rainy-garden .save-button:hover:not(:disabled) {
+  box-shadow: 0 10px 28px
+    color-mix(in srgb, var(--rg-rain-deep), transparent 55%);
+}
+
+.theme-rainy-garden ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.theme-rainy-garden ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.theme-rainy-garden ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--rg-rain-deep), transparent 35%);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.theme-rainy-garden ::-webkit-scrollbar-thumb:hover {
+  background: var(--rg-rain);
+  background-clip: content-box;
+}
+
+.theme-rainy-garden .boot-screen,
+.theme-rainy-garden .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 48%
+  );
+}
+
+/* =============================================================================
+   BASE DE LOS TEMAS CLAROS  ·  html.theme-light
+   -----------------------------------------------------------------------------
+   El panel está escrito para fondo oscuro: tiene más de cien colores de texto
+   y de fondo fijos repartidos entre style.css, App.vue y siete vistas y
+   componentes —blancos azulados en los títulos, rojos y verdes encendidos en
+   los estados, cajas oscuras en los avisos— que sobre fondo claro desaparecen
+   o chillan. Este bloque los pisa TODOS de una vez, agrupados por el color al
+   que van y no por el archivo del que vienen.
+
+   App.vue añade la clase `theme-light` en el <html> además de la del tema
+   cuando el tema elegido es de fondo claro (ver `lightThemeIds`). Cada tema
+   claro solo tiene que declarar las variables --light-* de aquí abajo y
+   ocuparse de su propia personalidad: fondo, superficies, iconos y acentos.
+
+   POR QUÉ EL PREFIJO `html`. Varios de esos colores viven en bloques
+   `<style scoped>`, que Vue compila con un selector de atributo extra y por
+   tanto pesan más que una clase suelta. Añadir el elemento `html` delante da a
+   estas reglas la especificidad justa para ganar siempre, sin repartir
+   `!important` por todo el archivo.
+
+   Variables que hay que declarar en cada tema claro:
+     --light-ink          texto principal
+     --light-ink-soft    texto secundario
+     --light-ok             verde de "todo bien" (texto)
+     --light-ok-bg       su relleno
+     --light-ok-border       su borde
+     --light-alert         rojo de aviso (texto)
+     --light-alert-bg   su relleno
+     --light-amber          ámbar de "atención" (texto)
+     --light-amber-bg    su relleno
+     --light-info-bg     relleno del nivel "info" del registro
+     --light-debug-bg    relleno del nivel "debug" del registro
+     --light-track          pista del control deslizante
+     --light-ring            aro de las muestras de color
+     --light-link         enlaces de ayuda
+     --light-link-hover   enlaces con el cursor encima
+     --light-button-text    texto encima de los botones de acción
+   ========================================================================== */
+
+html.theme-light {
+  /* Sin esto el navegador sigue pintando los controles nativos —desplegables,
+     cursor de texto, barras— en su versión oscura, y sobre fondo claro se ven
+     como manchas negras. */
+  color-scheme: light;
+}
+
+/* --- Tinta: todo lo que era blanco azulado -------------------------------- */
+html.theme-light,
+html.theme-light .brand,
+html.theme-light .sidebar-nav button:hover,
+html.theme-light .sidebar-nav button.selected,
+html.theme-light .sidebar-bottom strong,
+html.theme-light .topbar h1,
+html.theme-light .hero-card h2,
+html.theme-light .stat-card strong,
+html.theme-light .panel-heading h2,
+html.theme-light .setting-label,
+html.theme-light .accordion-header,
+html.theme-light .notif-label,
+html.theme-light .sidebar-user-badge,
+html.theme-light .retry-button:hover,
+html.theme-light .download-form input,
+html.theme-light .speed-row input,
+html.theme-light .speed-row select,
+html.theme-light .token-row input,
+html.theme-light .update-card h2,
+html.theme-light .update-status-text,
+html.theme-light .listener-hero h2,
+html.theme-light .listener-add input,
+html.theme-light .scanner-input,
+html.theme-light .compact-select,
+html.theme-light .chat-chip strong,
+html.theme-light .bulk-download,
+html.theme-light .bulk-delete,
+html.theme-light .topic-picker-head strong,
+html.theme-light .topic-select,
+html.theme-light .ghost-button:hover,
+html.theme-light .logs-hero h2,
+html.theme-light .counter strong,
+html.theme-light .level-chip.active,
+html.theme-light .cat-select,
+html.theme-light .search-box input,
+html.theme-light .tool-button,
+html.theme-light .log-message,
+html.theme-light .auth-logo,
+html.theme-light .auth-header h2,
+html.theme-light .step-label,
+html.theme-light .step-intro h3,
+html.theme-light .form-group input,
+html.theme-light .auth-button.secondary:hover:not(:disabled),
+html.theme-light .auth-button.ghost,
+html.theme-light .auth-button.ghost:not(:disabled):hover,
+html.theme-light .token-input-row input,
+html.theme-light .ghost-icon-btn:hover,
+html.theme-light .modal-header h3,
+html.theme-light .cancel-btn:hover,
+html.theme-light .folder-current,
+html.theme-light .folder-dialog-header h3,
+html.theme-light .folder-entry,
+html.theme-light .folder-entry:hover,
+html.theme-light .icon-button:hover,
+html.theme-light .secondary-button:hover,
+html.theme-light .theme-chip:hover,
+html.theme-light .theme-chip.active {
+  color: var(--light-ink);
+}
+
+/* El logotipo de la barra lateral es texto SVG: se pinta con fill y stroke, no
+   con color, así que no le vale la regla de arriba. */
+html.theme-light .brand-logo-text {
+  fill: var(--light-ink);
+}
+html.theme-light .brand-logo-text tspan,
+html.theme-light .brand-version-text tspan {
+  stroke: var(--light-ink);
+}
+
+/* --- Texto secundario ----------------------------------------------------- */
+html.theme-light .sidebar-status,
+html.theme-light .empty-state p,
+html.theme-light .download-form input::placeholder {
+  color: var(--light-ink-soft);
+}
+
+/* --- Verde de "todo bien" ------------------------------------------------- */
+html.theme-light .save-state,
+html.theme-light .badge,
+html.theme-light .sidebar-user-badge .user-icon,
+html.theme-light .success-icon,
+html.theme-light .auth-alert.success,
+html.theme-light .media-song,
+html.theme-light .row-side .resume-action {
+  color: var(--light-ok);
+}
+
+html.theme-light .badge,
+html.theme-light .save-state {
+  background: var(--light-ok-bg);
+  border-color: var(--light-ok-border);
+}
+
+/* --- Rojo de alerta ------------------------------------------------------- */
+html.theme-light .sidebar-status.is-disconnected,
+html.theme-light .row-side button,
+html.theme-light .row-side button:hover,
+html.theme-light .delete-button,
+html.theme-light .delete-button:hover,
+html.theme-light .toast.danger,
+html.theme-light .sidebar-user-badge .logout-btn,
+html.theme-light .sidebar-user-badge .logout-btn:hover,
+html.theme-light .clear-history-button,
+html.theme-light .action-btn-mini.danger:hover,
+html.theme-light .header-icon.danger,
+html.theme-light .folder-error,
+html.theme-light .auth-alert.danger,
+html.theme-light .logs-error,
+html.theme-light .tool-button.danger:hover,
+html.theme-light .bulk-delete:hover,
+html.theme-light .delete-small,
+html.theme-light .delete-small:hover,
+html.theme-light .level-chip.active.error,
+html.theme-light .exposure-banner {
+  color: var(--light-alert);
+}
+
+/* Las cajas oscuras de aviso pasan al relleno claro del tema. */
+html.theme-light .toast.danger,
+html.theme-light .delete-button:hover,
+html.theme-light .sidebar-user-badge .logout-btn:hover,
+html.theme-light .header-icon.danger,
+html.theme-light .folder-error,
+html.theme-light .auth-alert.danger,
+html.theme-light .logs-error,
+html.theme-light .tool-button.danger:hover,
+html.theme-light .bulk-delete:hover,
+html.theme-light .delete-small,
+html.theme-light .delete-small:hover,
+html.theme-light .level-chip.active.error,
+html.theme-light .clear-history-button,
+html.theme-light .exposure-banner {
+  background: var(--light-alert-bg);
+  border-color: color-mix(in srgb, var(--light-alert), transparent 78%);
+}
+
+html.theme-light .exposure-banner .banner-icon {
+  color: var(--light-amber);
+}
+
+/* --- Ámbar de "atención" -------------------------------------------------- */
+html.theme-light .row-side .pause-action,
+html.theme-light .icon-amber,
+html.theme-light .counter.warn strong,
+html.theme-light .log-level.warn,
+html.theme-light .level-chip.active.warn {
+  color: var(--light-amber);
+}
+
+/* --- Chips de nivel activos (Logs) --- */
+html.theme-light .level-chip {
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 60%);
+  color: var(--light-ink);
+}
+
+html.theme-light .level-chip.active.error {
+  background: var(--light-alert-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--light-alert), transparent 60%) !important;
+  color: var(--light-alert) !important;
+}
+
+html.theme-light .level-chip.active.warn {
+  background: var(--light-amber-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--light-amber), transparent 60%) !important;
+  color: var(--light-amber) !important;
+}
+
+html.theme-light .level-chip.active.success {
+  background: var(--light-ok-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--light-ok), transparent 60%) !important;
+  color: var(--light-ok) !important;
+}
+
+html.theme-light .level-chip.active.info {
+  background: color-mix(in srgb, #29b6f6, transparent 82%) !important;
+  border: 1px solid color-mix(in srgb, #0288d1, transparent 60%) !important;
+  color: #0277bd !important;
+}
+
+html.theme-light .level-chip.active.debug {
+  background: var(--light-debug-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--light-ink), transparent 60%) !important;
+  color: var(--light-ink) !important;
+}
+
+/* --- Logs: Filas del registro, etiquetas de nivel y metadatos --- */
+html.theme-light .log-time {
+  color: var(--light-ink) !important;
+  font-weight: 600;
+}
+
+html.theme-light .log-category {
+  color: var(--light-ink-soft) !important;
+  font-weight: 600;
+}
+
+html.theme-light .log-level.error {
+  color: #b03a56 !important;
+}
+
+html.theme-light .log-level.warn {
+  color: #8f6414 !important;
+}
+
+html.theme-light .log-level.success {
+  color: #25756a !important;
+}
+
+html.theme-light .log-level.info {
+  color: #0277bd !important;
+}
+
+html.theme-light .log-level.debug {
+  color: var(--light-ink) !important;
+}
+
+html.theme-light .log-row.error::before {
+  background: #b03a56 !important;
+}
+
+html.theme-light .log-row.warn::before {
+  background: #8f6414 !important;
+}
+
+html.theme-light .log-row.success::before {
+  background: #25756a !important;
+}
+
+html.theme-light .log-row.info::before {
+  background: #0277bd !important;
+}
+
+html.theme-light .log-row.debug::before {
+  background: var(--light-ink-soft) !important;
+}
+
+html.theme-light .log-row:hover {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 90%
+  ) !important;
+}
+
+/* --- Logs: Filtro Orígenes Dropdown --- */
+html.theme-light .cat-select {
+  background-color: #ffffff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23463a57' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  border: 1px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 50%) !important;
+  color: var(--light-ink) !important;
+  max-width: 220px !important;
+  border-radius: 9px !important;
+  padding: 7px 30px 7px 10px !important;
+}
+html.theme-light .cat-select option {
+  background-color: #ffffff !important;
+  color: var(--light-ink) !important;
+}
+
+/* --- Histórico / Escáner --- */
+html.theme-light .ghost-button {
+  color: var(--light-ink) !important;
+}
+html.theme-light .ghost-button:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 75%
+  ) !important;
+  color: var(--light-ink) !important;
+}
+html.theme-light .ghost-button:disabled {
+  color: var(--light-ink-soft) !important;
+  opacity: 0.5;
+}
+
+html.theme-light .scanner-table th,
+html.theme-light .scanner-table td,
+html.theme-light .scanner-table .main-name,
+html.theme-light .scanner-table .col-date,
+html.theme-light .scanner-table .col-size {
+  color: var(--light-ink) !important;
+}
+html.theme-light .scanner-table .sub-name {
+  color: var(--light-ink-soft) !important;
+}
+
+html.theme-light .scanner-table .btn-icon {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 78%
+  ) !important;
+  border: 1px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 50%) !important;
+  color: var(--light-alert) !important;
+}
+html.theme-light .scanner-table .btn-icon:hover:not(:disabled) {
+  background: var(--sc-sakura-deep) !important;
+  color: #111111 !important;
+}
+
+html.theme-light .name-select-button,
+html.theme-light .bulk-name-button {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 80%
+  ) !important;
+  border: 1px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 50%) !important;
+  color: var(--light-alert) !important;
+}
+html.theme-light .name-select-button svg,
+html.theme-light .bulk-name-button svg {
+  color: var(--light-alert) !important;
+  stroke: var(--light-alert) !important;
+}
+
+/* --- Histórico: Menú flotante de selección de nombre --- */
+html.theme-light .name-dropdown {
+  background: #ffffff !important;
+  border: 2px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 40%) !important;
+  box-shadow: 0 8px 24px rgba(70, 58, 87, 0.18) !important;
+}
+
+html.theme-light .name-dropdown::before {
+  background: #ffffff !important;
+  border-color: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 40%
+  ) !important;
+}
+
+html.theme-light .name-option {
+  border: 1px solid transparent !important;
+}
+
+html.theme-light .name-option:hover {
+  background: var(--light-ok-bg) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 50%
+  ) !important;
+}
+
+html.theme-light .name-preview {
+  color: var(--light-ink) !important;
+}
+
+html.theme-light .name-option small {
+  color: var(--light-ink-soft) !important;
+}
+
+/* --- Descargas: Ícono de archivos e interacciones en Pausar / Cancelar --- */
+html.theme-light .file-symbol {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 75%
+  ) !important;
+  color: var(--light-alert) !important;
+}
+
+html.theme-light .row-side button {
+  color: var(--light-alert) !important;
+}
+html.theme-light .row-side button:hover {
+  color: #8e1b34 !important;
+  font-weight: 700;
+}
+
+html.theme-light .row-side .pause-action {
+  color: var(--light-amber) !important;
+}
+html.theme-light .row-side .pause-action:hover {
+  color: #634305 !important;
+  font-weight: 700;
+}
+
+html.theme-light .row-side .resume-action {
+  color: var(--light-ok) !important;
+}
+html.theme-light .row-side .resume-action:hover {
+  color: #124d45 !important;
+  font-weight: 700;
+}
+html.theme-light .auth-button.secondary:hover:not(:disabled) {
+  background: var(--light-info-bg);
+}
+
+/* Barritas de nivel del registro: son de 2px sobre fila clara, así que el
+   contraste mejora en vez de empeorar; se repintan solo por coherencia. */
+html.theme-light .log-row.error::before {
+  background: var(--light-alert);
+}
+html.theme-light .log-row.debug::before {
+  background: var(--light-ink-soft);
+}
+
+/* --- Botones de acción ---------------------------------------------------- */
+/* Encima del relleno del tema el blanco fijo puede perderse (pastel) o ser lo
+   correcto (azul saturado), así que el color lo decide cada tema. */
+html.theme-light .primary-button,
+html.theme-light .save-button,
+html.theme-light .auth-button.primary,
+html.theme-light .update-btn,
+html.theme-light .pager-btn.active {
+  color: var(--light-button-text) !important;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+/* Mismo problema, al revés: Edge Runner (lima) y Rainy Garden (gris muy claro)
+   son temas OSCUROS pero con el color principal clarísimo, así que el relleno
+   del botón sale casi blanco. .auth-button.primary trae el texto en #fff fijo
+   desde el propio componente y ahí no se lee nada; el resto de botones de
+   acción ya usan var(--user-bg-base) y por eso no les pasa.
+   Los estilos del componente van con scope (.auth-button.primary[data-v-…]),
+   de ahí el !important: sin él ganaría el del componente. El color va por
+   variable para que cada tema ponga su propio negro. */
+html.theme-edge-runner .auth-button.primary,
+html.theme-rainy-garden .auth-button.primary,
+html.theme-herbal-apothecary .auth-button.primary,
+html.theme-darling-red .auth-button.primary {
+  color: var(--user-bg-base) !important;
+}
+
+/* --- Controles nativos ---------------------------------------------------- */
+
+/* El interruptor: botón blanco con sombra, que sobre una pista clara es lo que
+   lo hace visible. */
+html.theme-light .switch span:after {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(60, 60, 70, 0.3);
+}
+
+/* El deslizante. `color-scheme: light` arregla casi todos los controles
+   nativos, pero no este: con `accent-color` puesto, Chromium pinta la parte no
+   rellena de la pista casi negra pase lo que pase, y sobre fondo claro es una
+   mancha. La única salida es pintar la pista a mano, y al hacerlo se pierde el
+   relleno de color hasta el tirador (Chromium no tiene un pseudo-elemento para
+   esa parte; Firefox sí, y por eso lleva su regla aparte). No se pierde
+   información: el valor sale en cifras al lado de la etiqueta. */
+html.theme-light .range-input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 18px;
+}
+html.theme-light .range-input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--light-track);
+}
+html.theme-light .range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--user-primary);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(60, 60, 70, 0.35);
+  cursor: pointer;
+}
+html.theme-light .range-input::-moz-range-track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--light-track);
+}
+html.theme-light .range-input::-moz-range-progress {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--user-primary);
+}
+html.theme-light .range-input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--user-primary);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(60, 60, 70, 0.35);
+  cursor: pointer;
+}
+
+/* La flecha de los desplegables sobre fondo claro debe usar la tinta suave del tema. */
+html.theme-light select,
+html.theme-light .speed-row select,
+html.theme-light .compact-select,
+html.theme-light .topic-select,
+html.theme-light .pager-select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--light-ink-soft) 50%),
+    linear-gradient(135deg, var(--light-ink-soft) 50%, transparent 50%) !important;
+}
+
+/* El aro interior de las muestras de color de Ajustes es blanco: sobre un
+   relleno claro no se ve y el círculo queda sin borde. */
+html.theme-light .theme-swatch,
+html.theme-light .theme-dot {
+  box-shadow: inset 0 0 0 1px var(--light-ring);
+}
+/* Repetido con el resalte porque este selector le gana en especificidad al
+   .theme-dot.active del panel y si no lo incluye borraría el aro del elegido. */
+html.theme-light .theme-dot.active {
+  box-shadow:
+    inset 0 0 0 1px var(--light-ring),
+    0 0 0 3px var(--user-bg-base),
+    0 0 0 5px var(--user-primary),
+    0 0 15px var(--user-glow);
+}
+
+/* --- Enlaces -------------------------------------------------------------- */
+html.theme-light .inline-link,
+html.theme-light .inline-link:visited {
+  color: var(--light-link);
+}
+html.theme-light .inline-link:hover {
+  color: var(--light-link-hover);
+}
+html.theme-light .inline-link:focus-visible {
+  outline-color: var(--light-link);
+}
+
+/* --- FLOOD_WAIT Banner y Badges en Temas Claros -------------------------- */
+html.theme-light .topbar-flood-pill {
+  background: #fff3e0;
+  border-color: #ffe0b2;
+  color: #e65100;
+}
+
+html.theme-light .flood-alert-banner {
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
+  border-color: #ffe0b2;
+  box-shadow: 0 4px 14px rgba(230, 81, 0, 0.06);
+}
+
+html.theme-light .flood-alert-icon {
+  background: #ffe0b2;
+  color: #e65100;
+}
+
+html.theme-light .flood-alert-body h3 {
+  color: #bf360c;
+}
+
+html.theme-light .flood-alert-body p {
+  color: #4e342e;
+}
+
+html.theme-light .flood-alert-timer {
+  background: #ffffff;
+  border-color: #ffcc80;
+  box-shadow: 0 2px 8px rgba(230, 81, 0, 0.08);
+}
+
+html.theme-light .flood-alert-timer span {
+  color: #e65100;
+}
+
+html.theme-light .flood-alert-timer strong {
+  color: #bf360c;
+}
+
+html.theme-light .flood-status-pill {
+  background: #fff3e0;
+  border-color: #ffe0b2;
+  color: #e65100;
+}
+
+/* -----------------------------------------------------------------------------
+   Silent Cherry (color 19)   ·   tema claro
+   Marfil lavanda, rosa de cerezo y verde agua, con luz difusa y pétalos
+   cayendo despacio. Las correcciones de fondo claro están en el bloque común
+   de arriba; aquí solo va lo que hace a este tema ser este tema.
+   -------------------------------------------------------------------------- */
+html.theme-silent-cherry {
+  --sc-sakura: #ffb7c5;
+  --sc-sakura-deep: #f48fb1;
+  --sc-water: #a0e7e5;
+  --sc-mint: #80cbc4;
+  /* La tinta no es negra sino un ciruela agrisado, que es lo que deja la
+     pantalla suave en vez de dura. */
+  --sc-ink: #463a57;
+  --sc-shadow: rgba(176, 138, 160, 0.16);
+
+  /* Los estados necesitan versiones oscurecidas: los pasteles de la paleta
+     valen para rellenos, pero como texto sobre marfil no llegan al contraste
+     mínimo para leerse. */
+  --light-ink: #463a57;
+  --light-ink-soft: #6b6270;
+  --light-ok: #25756a;
+  --light-ok-bg: color-mix(in srgb, var(--sc-water), transparent 72%);
+  --light-ok-border: color-mix(in srgb, var(--sc-mint), transparent 60%);
+  --light-alert: #b03a56;
+  --light-alert-bg: #fbe0e8;
+  --light-amber: #8f6414;
+  --light-amber-bg: #f9ecd8;
+  --light-info-bg: color-mix(in srgb, var(--sc-sakura), transparent 80%);
+  --light-debug-bg: #ddd5e6;
+  --light-track: color-mix(in srgb, var(--sc-sakura), transparent 62%);
+  --light-ring: rgba(70, 58, 87, 0.14);
+  --light-link: #b03a56;
+  --light-link-hover: #8e2a44;
+  /* Los botones llevan el degradado pastel: encima, el blanco se pierde. */
+  --light-button-text: #111111;
+}
+
+/* --- El jardín en flor ---------------------------------------------------- */
+
+html.theme-silent-cherry body {
+  background-image:
+    /* Rama de cerezo en la esquina de arriba. Es un SVG dibujado a mano dentro
+       del propio CSS (codificado como URL, no en base64, para que se pueda
+       seguir leyendo y retocando desde aquí). Lleva su opacidad dentro del
+       propio SVG y encima queda tapada por los paneles, así que se lee como
+       una marca de agua y no como una ilustración. */
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20180'%3E%3Cg%20opacity='.5'%3E%3Cg%20fill='none'%20stroke='%23cba3ab'%20stroke-width='2.6'%20stroke-linecap='round'%3E%3Cpath%20d='M240%2012%20C198%2018%20168%2034%20138%2058%20C116%2076%2096%2088%2074%2094'/%3E%3Cpath%20d='M176%2030%20C170%2048%20166%2064%20168%2082'/%3E%3Cpath%20d='M140%2056%20C128%2044%20116%2038%20100%2034'/%3E%3Cpath%20d='M196%2062%20C206%2076%20210%2092%20208%20110'/%3E%3Cpath%20d='M118%2078%20C114%2092%20116%20104%20124%20114'/%3E%3C/g%3E%3Cg%20fill='%23f8c2ce'%3E%3Cellipse%20cx='187.7'%20cy='13.8'%20rx='7.8'%20ry='11.7'%20transform='rotate(8%20187.7%2013.8)'/%3E%3Cellipse%20cx='198.1'%20cy='23.9'%20rx='7.8'%20ry='11.7'%20transform='rotate(80%20198.1%2023.9)'/%3E%3Cellipse%20cx='191.8'%20cy='36.9'%20rx='7.8'%20ry='11.7'%20transform='rotate(152%20191.8%2036.9)'/%3E%3Cellipse%20cx='177.5'%20cy='34.8'%20rx='7.8'%20ry='11.7'%20transform='rotate(224%20177.5%2034.8)'/%3E%3Cellipse%20cx='174.9'%20cy='20.6'%20rx='7.8'%20ry='11.7'%20transform='rotate(296%20174.9%2020.6)'/%3E%3Ccircle%20cx='186.0'%20cy='26.0'%20r='3.9'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='155.5'%20cy='49.8'%20rx='6.2'%20ry='9.4'%20transform='rotate(34%20155.5%2049.8)'/%3E%3Cellipse%20cx='159.5'%20cy='60.7'%20rx='6.2'%20ry='9.4'%20transform='rotate(106%20159.5%2060.7)'/%3E%3Cellipse%20cx='150.3'%20cy='67.8'%20rx='6.2'%20ry='9.4'%20transform='rotate(178%20150.3%2067.8)'/%3E%3Cellipse%20cx='140.8'%20cy='61.4'%20rx='6.2'%20ry='9.4'%20transform='rotate(250%20140.8%2061.4)'/%3E%3Cellipse%20cx='143.9'%20cy='50.2'%20rx='6.2'%20ry='9.4'%20transform='rotate(322%20143.9%2050.2)'/%3E%3Ccircle%20cx='150.0'%20cy='58.0'%20r='3.1'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='204.0'%20cy='69.8'%20rx='5.7'%20ry='8.6'%20transform='rotate(62%20204.0%2069.8)'/%3E%3Cellipse%20cx='202.5'%20cy='80.3'%20rx='5.7'%20ry='8.6'%20transform='rotate(134%20202.5%2080.3)'/%3E%3Cellipse%20cx='192.0'%20cy='82.1'%20rx='5.7'%20ry='8.6'%20transform='rotate(206%20192.0%2082.1)'/%3E%3Cellipse%20cx='187.1'%20cy='72.7'%20rx='5.7'%20ry='8.6'%20transform='rotate(278%20187.1%2072.7)'/%3E%3Cellipse%20cx='194.4'%20cy='65.1'%20rx='5.7'%20ry='8.6'%20transform='rotate(350%20194.4%2065.1)'/%3E%3Ccircle%20cx='196.0'%20cy='74.0'%20r='2.9'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='120.1'%20cy='32.1'%20rx='5.2'%20ry='7.8'%20transform='rotate(15%20120.1%2032.1)'/%3E%3Cellipse%20cx='126.2'%20cy='39.6'%20rx='5.2'%20ry='7.8'%20transform='rotate(87%20126.2%2039.6)'/%3E%3Cellipse%20cx='120.9'%20cy='47.7'%20rx='5.2'%20ry='7.8'%20transform='rotate(159%20120.9%2047.7)'/%3E%3Cellipse%20cx='111.6'%20cy='45.2'%20rx='5.2'%20ry='7.8'%20transform='rotate(231%20111.6%2045.2)'/%3E%3Cellipse%20cx='111.1'%20cy='35.5'%20rx='5.2'%20ry='7.8'%20transform='rotate(303%20111.1%2035.5)'/%3E%3Ccircle%20cx='118.0'%20cy='40.0'%20r='2.6'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='169.8'%20cy='96.7'%20rx='6.8'%20ry='10.1'%20transform='rotate(47%20169.8%2096.7)'/%3E%3Cellipse%20cx='171.3'%20cy='109.2'%20rx='6.8'%20ry='10.1'%20transform='rotate(119%20171.3%20109.2)'/%3E%3Cellipse%20cx='160.0'%20cy='114.5'%20rx='6.8'%20ry='10.1'%20transform='rotate(191%20160.0%20114.5)'/%3E%3Cellipse%20cx='151.4'%20cy='105.3'%20rx='6.8'%20ry='10.1'%20transform='rotate(263%20151.4%20105.3)'/%3E%3Cellipse%20cx='157.5'%20cy='94.3'%20rx='6.8'%20ry='10.1'%20transform='rotate(335%20157.5%2094.3)'/%3E%3Ccircle%20cx='162.0'%20cy='104.0'%20r='3.4'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='208.5'%20cy='115.1'%20rx='4.7'%20ry='7.0'%20transform='rotate(20%20208.5%20115.1)'/%3E%3Cellipse%20cx='213.4'%20cy='122.3'%20rx='4.7'%20ry='7.0'%20transform='rotate(92%20213.4%20122.3)'/%3E%3Cellipse%20cx='208.0'%20cy='129.1'%20rx='4.7'%20ry='7.0'%20transform='rotate(164%20208.0%20129.1)'/%3E%3Cellipse%20cx='199.9'%20cy='126.1'%20rx='4.7'%20ry='7.0'%20transform='rotate(236%20199.9%20126.1)'/%3E%3Cellipse%20cx='200.2'%20cy='117.5'%20rx='4.7'%20ry='7.0'%20transform='rotate(308%20200.2%20117.5)'/%3E%3Ccircle%20cx='206.0'%20cy='122.0'%20r='2.3'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='98.9'%20cy='71.5'%20rx='4.7'%20ry='7.0'%20transform='rotate(70%2098.9%2071.5)'/%3E%3Cellipse%20cx='96.5'%20cy='79.8'%20rx='4.7'%20ry='7.0'%20transform='rotate(142%2096.5%2079.8)'/%3E%3Cellipse%20cx='87.9'%20cy='80.1'%20rx='4.7'%20ry='7.0'%20transform='rotate(214%2087.9%2080.1)'/%3E%3Cellipse%20cx='84.9'%20cy='72.0'%20rx='4.7'%20ry='7.0'%20transform='rotate(286%2084.9%2072.0)'/%3E%3Cellipse%20cx='91.7'%20cy='66.6'%20rx='4.7'%20ry='7.0'%20transform='rotate(358%2091.7%2066.6)'/%3E%3Ccircle%20cx='92.0'%20cy='74.0'%20r='2.3'%20fill='%23f0a8bd'/%3E%3Cellipse%20cx='131.3'%20cy='90.3'%20rx='4.2'%20ry='6.2'%20transform='rotate(30%20131.3%2090.3)'/%3E%3Cellipse%20cx='134.4'%20cy='97.4'%20rx='4.2'%20ry='6.2'%20transform='rotate(102%20134.4%2097.4)'/%3E%3Cellipse%20cx='128.7'%20cy='102.5'%20rx='4.2'%20ry='6.2'%20transform='rotate(174%20128.7%20102.5)'/%3E%3Cellipse%20cx='122.0'%20cy='98.7'%20rx='4.2'%20ry='6.2'%20transform='rotate(246%20122.0%2098.7)'/%3E%3Cellipse%20cx='123.6'%20cy='91.1'%20rx='4.2'%20ry='6.2'%20transform='rotate(318%20123.6%2091.1)'/%3E%3Ccircle%20cx='128.0'%20cy='96.0'%20r='2.1'%20fill='%23f0a8bd'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    /* Luz difusa: tres manchas grandes y desenfocadas. */
+    radial-gradient(
+        38% 30% at 88% 6%,
+        color-mix(in srgb, var(--sc-sakura), transparent 55%) 0%,
+        transparent 70%
+      ),
+    radial-gradient(
+      44% 34% at 6% 88%,
+      color-mix(in srgb, var(--sc-water), transparent 62%) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      52% 40% at 72% 104%,
+      color-mix(in srgb, var(--sc-sakura), transparent 72%) 0%,
+      transparent 68%
+    ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 52%
+    );
+  background-repeat: no-repeat;
+  background-size:
+    340px auto,
+    auto,
+    auto,
+    auto,
+    auto;
+  /* Retirada hacia fuera por arriba y por la derecha: el reloj de la barra
+     superior vive en esa esquina y la rama no puede pisarlo. */
+  background-position:
+    right -76px top -54px,
+    center,
+    center,
+    center,
+    center;
+  background-attachment: fixed;
+}
+
+/* Pétalos. Mismo mecanismo que la lluvia del jardín y las estrellas del
+   crepúsculo: elipses dentro de un mosaico que se repite, movido entero con
+   transform un recorrido igual al alto del mosaico, así que el bucle no salta.
+   Dos capas: la lejana por detrás de los paneles y la cercana por delante, muy
+   pocas y muy tenues, porque aquí lo que se busca es calma. */
+html.theme-silent-cherry body::before,
+html.theme-silent-cherry::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+}
+
+html.theme-silent-cherry body::before {
+  z-index: -1;
+  background-image:
+    radial-gradient(
+      4px 6px at 14% 12%,
+      color-mix(in srgb, var(--sc-sakura-deep), transparent 42%),
+      transparent 70%
+    ),
+    radial-gradient(
+      3px 5px at 42% 38%,
+      color-mix(in srgb, var(--sc-sakura), transparent 38%),
+      transparent 70%
+    ),
+    radial-gradient(
+      5px 7px at 71% 20%,
+      color-mix(in srgb, var(--sc-sakura-deep), transparent 50%),
+      transparent 70%
+    ),
+    radial-gradient(
+      3px 4px at 88% 58%,
+      color-mix(in srgb, var(--sc-sakura), transparent 44%),
+      transparent 70%
+    ),
+    radial-gradient(
+      4px 6px at 28% 72%,
+      color-mix(in srgb, var(--sc-sakura-deep), transparent 52%),
+      transparent 70%
+    ),
+    radial-gradient(
+      3px 5px at 60% 88%,
+      color-mix(in srgb, var(--sc-sakura), transparent 46%),
+      transparent 70%
+    );
+  background-size: 300px 380px;
+  animation: scPetalsFar 11s linear infinite;
+}
+
+html.theme-silent-cherry::before {
+  z-index: 400;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(
+      6px 9px at 26% 24%,
+      color-mix(in srgb, var(--sc-sakura-deep), transparent 55%),
+      transparent 70%
+    ),
+    radial-gradient(
+      5px 8px at 68% 62%,
+      color-mix(in srgb, var(--sc-sakura), transparent 52%),
+      transparent 70%
+    ),
+    radial-gradient(
+      5px 7px at 90% 16%,
+      color-mix(in srgb, var(--sc-sakura-deep), transparent 62%),
+      transparent 70%
+    );
+  background-size: 520px 560px;
+  animation: scPetalsNear 8s linear infinite;
+}
+
+/* El giro va dentro del transform y la caída después, para que los pétalos
+   bajen en diagonal por su propio eje; por eso las capas sobresalen un 20% de
+   la pantalla, para que al girar no asomen los bordes. */
+@keyframes scPetalsFar {
+  from {
+    transform: rotate(14deg) translateY(0);
+  }
+  to {
+    transform: rotate(14deg) translateY(380px);
+  }
+}
+
+@keyframes scPetalsNear {
+  from {
+    transform: rotate(14deg) translateY(0);
+  }
+  to {
+    transform: rotate(14deg) translateY(560px);
+  }
+}
+
+/* Agua tranquila al pie: ondas concéntricas quietas, que es lo que hace el
+   agua en calma, con un brillo que respira muy despacio. */
+html.theme-silent-cherry body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(
+      circle at 16% 150%,
+      transparent 0 46px,
+      color-mix(in srgb, var(--sc-mint), transparent 86%) 46px 48px
+    ),
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--sc-water), transparent 86%) 0%,
+      transparent 100%
+    );
+  animation: scWater 10s ease-in-out infinite;
+}
+
+@keyframes scWater {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+html.theme-silent-cherry .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-silent-cherry body::before {
+    animation: none;
+  }
+  html.theme-silent-cherry::before {
+    display: none;
+  }
+  html.theme-silent-cherry body::after {
+    animation: none;
+  }
+  html.theme-silent-cherry .progress-fill::before,
+  html.theme-silent-cherry .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- Superficies ---------------------------------------------------------- */
+/* Papel translúcido sobre el jardín: blanco con algo de transparencia y
+   desenfoque, borde rosa muy pálido y sombra rosada en vez de negra, que sobre
+   fondo claro es lo que evita el efecto "recorte sucio". */
+
+html.theme-silent-cherry .sidebar {
+  background: color-mix(in srgb, var(--user-surface), transparent 20%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid var(--user-border);
+}
+
+html.theme-silent-cherry .panel,
+html.theme-silent-cherry .stat-card,
+html.theme-silent-cherry .hero-card,
+html.theme-silent-cherry .logs-hero,
+html.theme-silent-cherry .listener-hero {
+  background-color: color-mix(in srgb, var(--user-surface), transparent 12%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: var(--user-border);
+  box-shadow: 0 10px 30px var(--sc-shadow);
+}
+
+html.theme-silent-cherry .stat-card:hover {
+  box-shadow: 0 14px 30px
+    color-mix(in srgb, var(--sc-sakura-deep), transparent 78%);
+}
+
+html.theme-silent-cherry .hero-card {
+  background-image: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--user-surface-light), transparent 10%) 0%,
+    color-mix(in srgb, var(--user-surface), transparent 10%) 55%,
+    color-mix(in srgb, var(--sc-water), var(--user-surface) 80%) 100%
+  );
+  box-shadow: 0 16px 40px var(--sc-shadow);
+}
+
+html.theme-silent-cherry .hero-card:after {
+  background: radial-gradient(circle, var(--sc-sakura) 0%, transparent 66%);
+  opacity: 0.28;
+  filter: blur(22px);
+}
+
+html.theme-silent-cherry .toast {
+  box-shadow: 0 12px 34px var(--sc-shadow);
+}
+
+/* --- Acentos -------------------------------------------------------------- */
+
+/* Los cuatro iconos de cifras, en pastel: cerezo, lavanda, agua y gris suave. */
+html.theme-silent-cherry .stat-icon.blue {
+  background: color-mix(in srgb, var(--sc-sakura), transparent 55%);
+  color: #a94a67;
+}
+html.theme-silent-cherry .stat-icon.amber {
+  background: #ded4f0;
+  color: #5f4f8f;
+}
+html.theme-silent-cherry .stat-icon.green {
+  background: color-mix(in srgb, var(--sc-water), transparent 58%);
+  color: var(--light-ok);
+}
+html.theme-silent-cherry .stat-icon.gray {
+  background: #ded7e2;
+  color: var(--light-ink-soft);
+}
+
+/* La pestaña activa, en rosa fuerte (sakura-deep / cherry) para destacar en el sidebar. */
+html.theme-silent-cherry .sidebar-nav button.selected {
+  background: color-mix(
+    in srgb,
+    var(--sc-sakura-deep),
+    transparent 60%
+  ) !important;
+  color: #a94a67;
+  box-shadow: 0 6px 18px var(--sc-shadow);
+}
+html.theme-silent-cherry .sidebar-nav button.selected::before {
+  background-color: #a94a67;
+}
+html.theme-silent-cherry .sidebar-nav button.selected span {
+  color: #a94a67;
+}
+html.theme-silent-cherry .sidebar-nav button:hover {
+  background: color-mix(in srgb, var(--sc-sakura), transparent 70%);
+  color: #a94a67;
+}
+
+@media (max-width: 900px) {
+  html.theme-silent-cherry .sidebar-nav button.selected {
+    box-shadow: 0 6px 18px var(--sc-shadow);
+  }
+}
+
+html.theme-silent-cherry .status-dot,
+html.theme-silent-cherry .live-dot {
+  background: var(--light-ok);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sc-mint), transparent 40%);
+}
+html.theme-silent-cherry .status-dot.disconnected {
+  background: var(--light-alert);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--light-alert), transparent 55%);
+}
+
+/* El interruptor «Apagar al terminar» armado hereda el rosa pastel del acento,
+   que sobre el papel claro del sidebar no llega a leerse: el icono y el texto
+   van en rosa oscuro, el mismo que los enlaces del tema. La etiqueta de estado
+   sigue en gris tinta porque ya tiene su propio color. */
+html.theme-silent-cherry .sidebar-shutdown.armed .shutdown-info {
+  color: var(--light-alert);
+}
+
+/* --- Barras de progreso --------------------------------------------------- */
+/* Pétalos flotando en la corriente. Misma técnica que los otros temas: capa
+   propia movida con transform y recorrido fijo, para que el avance se vea
+   igual con la barra corta que con la barra llena. Patrón a 100° con periodo
+   de 12px sobre su eje: en horizontal repite cada 12 / sen(100°) = 12,19px, y
+   el recorrido, 24,37px, son dos periodos justos. */
+
+/* --- Botones principales con texto e iconos en negro --- */
+html.theme-silent-cherry .btn--primary,
+html.theme-silent-cherry .primary-button,
+html.theme-silent-cherry .save-button,
+html.theme-silent-cherry .auth-button.primary,
+html.theme-silent-cherry .confirm-btn.primary,
+html.theme-silent-cherry .update-btn {
+  color: #111111 !important;
+  font-weight: 700;
+}
+
+html.theme-silent-cherry .btn--primary *,
+html.theme-silent-cherry .primary-button *,
+html.theme-silent-cherry .save-button *,
+html.theme-silent-cherry .auth-button.primary *,
+html.theme-silent-cherry .confirm-btn.primary *,
+html.theme-silent-cherry .update-btn * {
+  color: #111111 !important;
+  stroke: #111111 !important;
+}
+
+html.theme-silent-cherry .progress-fill,
+html.theme-silent-cherry .disk-bar .fill,
+html.theme-silent-cherry .update-progress-fill {
+  background-image: linear-gradient(
+    120deg,
+    #e05275 0%,
+    #b82d55 50%,
+    #21a096 100%
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, #b82d55, transparent 65%);
+}
+
+html.theme-silent-cherry .progress-track {
+  height: 6px;
+  background: color-mix(in srgb, var(--sc-sakura-deep), transparent 80%);
+  border: none;
+  border-radius: 8px;
+}
+
+html.theme-silent-cherry .progress-fill,
+html.theme-silent-cherry .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+html.theme-silent-cherry .progress-fill::before,
+html.theme-silent-cherry .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -26px;
+  background-image: repeating-linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.55) 0 3px,
+    rgba(255, 255, 255, 0) 3px 12px
+  );
+  animation: scCurrent 1.8s linear infinite;
+}
+
+@keyframes scCurrent {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-24.37px);
+  }
+}
+
+html.theme-silent-cherry .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.55) 0 3px,
+      rgba(255, 255, 255, 0) 3px 12px
+    ),
+    var(--user-gradient);
+}
+
+html.theme-silent-cherry ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+html.theme-silent-cherry ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.theme-silent-cherry ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--sc-sakura-deep), transparent 55%);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+html.theme-silent-cherry ::-webkit-scrollbar-thumb:hover {
+  background: var(--sc-sakura-deep);
+  background-clip: content-box;
+}
+
+html.theme-silent-cherry .boot-screen,
+html.theme-silent-cherry .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 52%
+  );
+}
+
+/* --- Ajustes --- */
+/* El icono de cada apartado va en el rosa pastel del acento y sobre el papel
+   claro apenas se lee: pasa al rosa oscuro del tema, el mismo de los enlaces
+   y del apagado armado. El texto de la cabecera (blanco azulado fijo) lo
+   corrige el bloque común de fondo claro. */
+html.theme-silent-cherry .accordion-icon {
+  color: var(--light-alert);
+}
+
+/* Campana y bot del sidebar: cuando están apagados van en fondo claro neutro;
+   al activarse (armed) toman un fondo rosa pastel con borde e ícono en
+   cereza oscuro para destacar claramente. */
+html.theme-silent-cherry .sidebar-toggle {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid color-mix(in srgb, var(--sc-sakura-deep), transparent 60%);
+  color: #7c6f8a;
+}
+
+html.theme-silent-cherry .sidebar-toggle.armed {
+  background: var(--light-alert-bg) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--light-alert),
+    transparent 50%
+  ) !important;
+  color: var(--light-alert) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--light-alert), transparent 82%);
+}
+
+html.theme-silent-cherry .sidebar-toggle:hover {
+  border-color: var(--light-alert) !important;
+  background: color-mix(in srgb, var(--sc-sakura), transparent 70%) !important;
+  color: var(--light-alert) !important;
+}
+
+html.theme-silent-cherry .sidebar-toggle.armed:hover {
+  background: #f7cbd7 !important;
+  border-color: var(--light-alert) !important;
+  color: #8e1b34 !important;
+}
+
+/* -----------------------------------------------------------------------------
+   osX (color 20)   ·   tema oscuro
+   Liquid Glass, el lenguaje visual de iOS 26/27, en su versión oscura: vidrio
+   ahumado sobre casi negro, borde apagado por fuera y brillo especular en el
+   filo de arriba, esquinas muy redondeadas y botones en cápsula.
+
+   El filo es la novedad que iOS 27 trajo sobre iOS 26: Apple oscureció el
+   borde de las superficies de vidrio y subió los brillos especulares para que
+   se separen mejor de lo que tienen detrás. En oscuro eso se traduce en un
+   borde blanco al 8% y una línea blanca al 14% en el canto superior; es lo que
+   hace que la superficie parezca tener grosor en vez de ser una mancha
+   translúcida.
+
+   EL PRESUPUESTO DE RENDIMIENTO, que aquí manda tanto como el aspecto.
+   `backdrop-filter` es de lo más caro que se le puede pedir a un webview: cada
+   superficie difuminada obliga a la GPU a recomponer lo que tiene debajo en
+   cada fotograma en que algo se mueva. Por eso este tema:
+
+     - NO tiene ninguna capa animada de fondo. Ni una. Es el único de los cinco
+       sin `@keyframes`, y también el más barato de los cinco. Es además lo
+       fiel: iOS está quieto hasta que lo tocas.
+     - Difumina solo las superficies grandes: barra lateral, paneles y tarjeta
+       principal. Las cuatro tarjetas de cifras van opacas, que a ese tamaño el
+       desenfoque no se aprecia y son cuatro capas menos.
+     - No difumina nada pequeño: chips, botones, píldoras y avisos van opacos.
+     - No anima NUNCA el propio desenfoque, que es el caso patológico.
+     - No usa `will-change`: fuerza capas de composición permanentes y en un
+       panel con esta cantidad de superficies sale caro.
+
+   El fondo lleva tres manchas de color muy diluidas, y no es decoración
+   gratuita: el vidrio necesita algo detrás que difuminar. Sobre negro plano el
+   desenfoque no se ve y se paga igual.
+
+   Y respeta `prefers-reduced-transparency` y `prefers-contrast: more` quitando
+   el vidrio del todo: es lo que hace iOS con esos mismos ajustes, y de paso es
+   la salida para una máquina que vaya justa.
+   -------------------------------------------------------------------------- */
+html.theme-osx {
+  /* La contraparte oscura de lo que hacen los temas claros: sin esto el
+     navegador pinta los controles nativos en modo claro y, por ejemplo, la
+     parte no rellena del deslizante sale blanca sobre el casi negro. Con esto
+     se pone gris translúcido, que es como la dibuja iOS, y de paso la lista
+     desplegable del selector de unidades y el cursor de texto también salen
+     oscuros. */
+  color-scheme: dark;
+
+  /* Colores de sistema de iOS en su variante oscura, que son más luminosos que
+     los de claro: el mismo azul de día se apaga sobre negro. */
+  --osx-blue: #0a84ff;
+  --osx-cyan: #64d2ff;
+  --osx-green: #30d158;
+  --osx-red: #ff453a;
+  --osx-orange: #ff9f0a;
+  --osx-glass: rgba(28, 28, 30, 0.62);
+  --osx-edge: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --osx-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* --- Fondo ---------------------------------------------------------------- */
+/* Estático y de una sola pasada, sin pseudo-elementos y sin animación. */
+html.theme-osx body {
+  background-image:
+    radial-gradient(
+      58% 42% at 84% -8%,
+      rgba(10, 132, 255, 0.22) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      52% 40% at 4% 102%,
+      rgba(94, 92, 230, 0.2) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      46% 34% at 62% 58%,
+      rgba(100, 210, 255, 0.07) 0%,
+      transparent 66%
+    ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 54%
+    );
+  background-attachment: fixed;
+}
+
+/* --- Liquid Glass --------------------------------------------------------- */
+
+html.theme-osx .sidebar {
+  background: rgba(22, 22, 24, 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+html.theme-osx .panel,
+html.theme-osx .hero-card,
+html.theme-osx .logs-hero,
+html.theme-osx .listener-hero {
+  background-color: var(--osx-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: var(--osx-edge), var(--osx-shadow);
+}
+
+html.theme-osx .hero-card {
+  border-radius: 24px;
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(10, 132, 255, 0.1) 100%
+  );
+}
+
+/* El halo de la esquina, como un reflejo en el vidrio. Sin animación. */
+html.theme-osx .hero-card:after {
+  background: radial-gradient(circle, var(--osx-blue) 0%, transparent 66%);
+  opacity: 0.22;
+  filter: blur(24px);
+}
+
+/* Las tarjetas de cifras van opacas a propósito: son cuatro, son pequeñas y el
+   desenfoque ahí no se nota, pero sí se paga. */
+html.theme-osx .stat-card {
+  background-color: #1c1c1e;
+  border-color: rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  box-shadow:
+    var(--osx-edge),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+html.theme-osx .stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    var(--osx-edge),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+html.theme-osx .toast {
+  background: rgba(36, 36, 38, 0.92);
+  border-radius: 16px;
+  box-shadow:
+    var(--osx-edge),
+    0 12px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* Cuando el sistema pide menos transparencia o más contraste, el vidrio se va
+   entero: superficies opacas y fondo plano. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  html.theme-osx .sidebar,
+  html.theme-osx .panel,
+  html.theme-osx .hero-card,
+  html.theme-osx .logs-hero,
+  html.theme-osx .listener-hero {
+    background-color: #1c1c1e;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+  html.theme-osx body {
+    background-image: none;
+  }
+}
+
+/* --- Formas --------------------------------------------------------------- */
+/* Cápsulas y esquinas grandes, que es lo que más delata a iOS. */
+
+html.theme-osx .primary-button,
+html.theme-osx .save-button,
+html.theme-osx .auth-button,
+html.theme-osx .clear-history-button {
+  border-radius: 999px;
+}
+
+/* El botón relleno de iOS lleva el texto en blanco. Aquí hay que decirlo
+   expresamente: el panel lo pinta con `var(--user-bg-base)`, que en un tema
+   oscuro es casi negro y sobre el azul no se leería. */
+html.theme-osx .primary-button,
+html.theme-osx .save-button,
+html.theme-osx .auth-button.primary,
+html.theme-osx .update-btn {
+  color: #ffffff !important;
+  font-weight: 600;
+  text-shadow: none;
+}
+
+html.theme-osx .primary-button,
+html.theme-osx .save-button {
+  box-shadow: 0 2px 12px rgba(10, 132, 255, 0.4);
+}
+html.theme-osx .primary-button:hover:not(:disabled),
+html.theme-osx .save-button:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
+}
+
+/* Los campos de iOS en oscuro no son cajas negras con borde, sino un gris
+   translúcido sin contorno. */
+html.theme-osx .download-form input,
+html.theme-osx .speed-row input,
+html.theme-osx .speed-row select,
+html.theme-osx .token-row input {
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.24);
+  border-color: transparent;
+}
+
+/* La pestaña activa: relleno azul diluido y etiqueta azul, sin la barra
+   lateral de los otros temas. */
+html.theme-osx .sidebar-nav button {
+  border-radius: 10px;
+}
+html.theme-osx .sidebar-nav button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+html.theme-osx .sidebar-nav button.selected {
+  background: rgba(10, 132, 255, 0.22) !important;
+  box-shadow: none;
+  color: #ffffff;
+}
+html.theme-osx .sidebar-nav button.selected::before {
+  display: none;
+}
+html.theme-osx .sidebar-nav button.selected span {
+  color: var(--osx-cyan);
+}
+
+@media (max-width: 900px) {
+  html.theme-osx .sidebar-nav button.selected {
+    box-shadow: none;
+  }
+}
+
+/* --- Acentos de sistema --------------------------------------------------- */
+
+html.theme-osx .stat-icon.blue {
+  background: rgba(10, 132, 255, 0.18);
+  color: var(--osx-blue);
+}
+html.theme-osx .stat-icon.amber {
+  background: rgba(255, 159, 10, 0.18);
+  color: var(--osx-orange);
+}
+html.theme-osx .stat-icon.green {
+  background: rgba(48, 209, 88, 0.18);
+  color: var(--osx-green);
+}
+html.theme-osx .stat-icon.gray {
+  background: rgba(142, 142, 147, 0.18);
+  color: #aeaeb2;
+}
+
+/* El interruptor de iOS es verde, no del color de acento. */
+html.theme-osx .switch span {
+  background: rgba(120, 120, 128, 0.32);
+}
+html.theme-osx .switch input:checked + span {
+  background: var(--osx-blue);
+}
+html.theme-osx .switch span:after {
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+html.theme-osx .switch input:checked + span:after,
+html.theme-osx .chat-name-mode-btn.active .chat-switch-thumb {
+  background: var(--user-bg-base);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+html.theme-osx .status-dot,
+html.theme-osx .live-dot {
+  background: var(--osx-green);
+  box-shadow: 0 0 8px rgba(48, 209, 88, 0.55);
+}
+html.theme-osx .status-dot.disconnected {
+  background: var(--osx-red);
+  box-shadow: 0 0 8px rgba(255, 69, 58, 0.55);
+}
+
+html.theme-osx .badge,
+html.theme-osx .save-state {
+  background: rgba(48, 209, 88, 0.16);
+  color: var(--osx-green);
+  border-color: rgba(48, 209, 88, 0.3);
+}
+
+html.theme-osx .count-pill {
+  background: rgba(10, 132, 255, 0.18);
+  color: var(--osx-cyan);
+}
+
+html.theme-osx .row-side button,
+html.theme-osx .delete-button,
+html.theme-osx .sidebar-user-badge .logout-btn {
+  color: var(--osx-red);
+}
+html.theme-osx .row-side .pause-action {
+  color: var(--osx-orange);
+}
+html.theme-osx .row-side .resume-action {
+  color: var(--osx-green);
+}
+html.theme-osx .sidebar-user-badge .user-icon {
+  color: var(--osx-green);
+}
+
+html.theme-osx .inline-link,
+html.theme-osx .inline-link:visited {
+  color: var(--osx-blue);
+}
+html.theme-osx .inline-link:hover {
+  color: var(--osx-cyan);
+}
+html.theme-osx .inline-link:focus-visible {
+  outline-color: var(--osx-blue);
+}
+
+/* --- Barras de progreso --------------------------------------------------- */
+/* Cápsula lisa, sin capa animada encima. Las de iOS no llevan textura, y de
+   paso es el único tema que no paga nada por su barra. */
+
+html.theme-osx .progress-track {
+  background: rgba(120, 120, 128, 0.28);
+  border-radius: 999px;
+}
+
+html.theme-osx .progress-fill,
+html.theme-osx .disk-bar .fill,
+html.theme-osx .update-progress-fill {
+  background-image: var(--user-gradient);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+html.theme-osx .disk-bar {
+  background: rgba(120, 120, 128, 0.28);
+  border-color: transparent;
+  border-radius: 999px;
+}
+
+html.theme-osx ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+html.theme-osx ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.theme-osx ::-webkit-scrollbar-thumb {
+  background: rgba(235, 235, 245, 0.22);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+html.theme-osx ::-webkit-scrollbar-thumb:hover {
+  background: rgba(235, 235, 245, 0.4);
+  background-clip: content-box;
+}
+
+html.theme-osx .boot-screen,
+html.theme-osx .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 54%
+  );
+}
+
+/* -----------------------------------------------------------------------------
+   Herbal Apothecary (color 21)   ·   tema oscuro
+   La botica : verde jade de su traje, azul cerúleo del hanfu, brote de
+   menta para lo que está vivo y encendido, y el bermellón del veneno guardado
+   para lo que va mal. Fondo de verde noche, papel de arroz y hierbas puestas a
+   secar en la esquina.
+
+   Una sola capa animada —las motas de polvo en la luz del candil—, que es lo
+   que pide un tema de botica: quieto, de anaquel.
+   -------------------------------------------------------------------------- */
+html.theme-herbal-apothecary {
+  --ha-jade: #4a7c59;
+  --ha-cerulean: #2b586c;
+  --ha-cerulean-light: #8fc0d4;
+  --ha-sprout: #7fb069;
+  --ha-sprout-soft: #99c2a2;
+  /* El bermellón no está en el themeMap porque no es un color de interfaz sino
+     de aviso: sale en errores, en lo destructivo y en poco más. Como texto
+     sobre el verde noche el #c0392b de la paleta se queda en 2,6:1, así que
+     hay una versión aclarada para las letras y la original para los rellenos. */
+  --ha-venom: #c0392b;
+  --ha-venom-light: #e57b6b;
+  --ha-lamp: #d9a441;
+  --ha-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+}
+
+/* --- La botica ------------------------------------------------------------ */
+
+html.theme-herbal-apothecary body {
+  background-image:
+    /* Hierbas colgadas a secar, atadas con cordel. SVG dibujado dentro del
+       propio CSS (codificado como URL, no en base64, para poder retocarlo
+       desde aquí). Lleva su opacidad dentro del SVG y va retirado hacia fuera
+       por arriba y por la derecha: en esa esquina vive el reloj de la barra
+       superior y las hierbas no pueden pisarlo. */
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20200'%3E%3Cg%20opacity='.38'%3E%3Cg%20fill='none'%20stroke='%235c8a68'%20stroke-width='2.2'%20stroke-linecap='round'%3E%3Cpath%20d='M44%20-6%20C30%2044%2064%2092%2054%20152'/%3E%3Cpath%20d='M116%20-6%20C128%2038%2096%2074%20102%20116'/%3E%3Cpath%20d='M186%20-6%20C176%2050%20206%20104%20196%20176'/%3E%3C/g%3E%3Cg%20fill='%2357876a'%3E%3Cellipse%20cx='45.7'%20cy='27.4'%20rx='4.6'%20ry='11.0'%20transform='rotate(142%2045.7%2027.4)'/%3E%3Cellipse%20cx='35.5'%20cy='27.4'%20rx='4.6'%20ry='11.0'%20transform='rotate(218%2035.5%2027.4)'/%3E%3Cellipse%20cx='49.1'%20cy='54.4'%20rx='4.2'%20ry='10.0'%20transform='rotate(132%2049.1%2054.4)'/%3E%3Cellipse%20cx='40.0'%20cy='56.0'%20rx='4.2'%20ry='10.0'%20transform='rotate(208%2040.0%2056.0)'/%3E%3Cellipse%20cx='54.7'%20cy='83.0'%20rx='3.8'%20ry='9.1'%20transform='rotate(130%2054.7%2083.0)'/%3E%3Cellipse%20cx='46.5'%20cy='84.7'%20rx='3.8'%20ry='9.1'%20transform='rotate(206%2046.5%2084.7)'/%3E%3Cellipse%20cx='59.0'%20cy='113.4'%20rx='3.4'%20ry='8.1'%20transform='rotate(136%2059.0%20113.4)'/%3E%3Cellipse%20cx='51.5'%20cy='114.2'%20rx='3.4'%20ry='8.1'%20transform='rotate(212%2051.5%20114.2)'/%3E%3Cellipse%20cx='58.3'%20cy='145.8'%20rx='3.0'%20ry='7.2'%20transform='rotate(147%2058.3%20145.8)'/%3E%3Cellipse%20cx='51.7'%20cy='145.3'%20rx='3.0'%20ry='7.2'%20transform='rotate(223%2051.7%20145.3)'/%3E%3Cellipse%20cx='123.6'%20cy='23.7'%20rx='4.6'%20ry='11.0'%20transform='rotate(144%20123.6%2023.7)'/%3E%3Cellipse%20cx='113.4'%20cy='23.4'%20rx='4.6'%20ry='11.0'%20transform='rotate(220%20113.4%2023.4)'/%3E%3Cellipse%20cx='118.6'%20cy='47.1'%20rx='4.2'%20ry='10.0'%20transform='rotate(155%20118.6%2047.1)'/%3E%3Cellipse%20cx='109.5'%20cy='45.0'%20rx='4.2'%20ry='10.0'%20transform='rotate(231%20109.5%2045.0)'/%3E%3Cellipse%20cx='111.7'%20cy='69.2'%20rx='3.8'%20ry='9.1'%20transform='rotate(158%20111.7%2069.2)'/%3E%3Cellipse%20cx='103.6'%20cy='66.8'%20rx='3.8'%20ry='9.1'%20transform='rotate(234%20103.6%2066.8)'/%3E%3Cellipse%20cx='106.1'%20cy='90.8'%20rx='3.4'%20ry='8.1'%20transform='rotate(153%20106.1%2090.8)'/%3E%3Cellipse%20cx='98.7'%20cy='89.4'%20rx='3.4'%20ry='8.1'%20transform='rotate(229%2098.7%2089.4)'/%3E%3Cellipse%20cx='104.8'%20cy='112.6'%20rx='3.0'%20ry='7.2'%20transform='rotate(140%20104.8%20112.6)'/%3E%3Cellipse%20cx='98.2'%20cy='112.9'%20rx='3.0'%20ry='7.2'%20transform='rotate(216%2098.2%20112.9)'/%3E%3Cellipse%20cx='189.3'%20cy='30.5'%20rx='4.6'%20ry='11.0'%20transform='rotate(140%20189.3%2030.5)'/%3E%3Cellipse%20cx='179.2'%20cy='30.8'%20rx='4.6'%20ry='11.0'%20transform='rotate(216%20179.2%2030.8)'/%3E%3Cellipse%20cx='192.7'%20cy='61.5'%20rx='4.2'%20ry='10.0'%20transform='rotate(133%20192.7%2061.5)'/%3E%3Cellipse%20cx='183.6'%20cy='62.9'%20rx='4.2'%20ry='10.0'%20transform='rotate(209%20183.6%2062.9)'/%3E%3Cellipse%20cx='197.8'%20cy='94.3'%20rx='3.8'%20ry='9.1'%20transform='rotate(133%20197.8%2094.3)'/%3E%3Cellipse%20cx='189.5'%20cy='95.7'%20rx='3.8'%20ry='9.1'%20transform='rotate(209%20189.5%2095.7)'/%3E%3Cellipse%20cx='201.4'%20cy='129.6'%20rx='3.4'%20ry='8.1'%20transform='rotate(138%20201.4%20129.6)'/%3E%3Cellipse%20cx='193.9'%20cy='130.1'%20rx='3.4'%20ry='8.1'%20transform='rotate(214%20193.9%20130.1)'/%3E%3Cellipse%20cx='200.3'%20cy='167.7'%20rx='3.0'%20ry='7.2'%20transform='rotate(146%20200.3%20167.7)'/%3E%3Cellipse%20cx='193.8'%20cy='167.2'%20rx='3.0'%20ry='7.2'%20transform='rotate(222%20193.8%20167.2)'/%3E%3C/g%3E%3Cg%20stroke='%238a6f4a'%20stroke-width='2'%20fill='none'%3E%3Cpath%20d='M37%2016%20C44%2012%2052%2014%2057%2019'/%3E%3Cpath%20d='M110%2014%20C117%2010%20126%2012%20131%2017'/%3E%3Cpath%20d='M179%2018%20C186%2014%20195%2016%20200%2021'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    /* La luz del candil, abajo a la izquierda; la luna entrando por arriba. */
+    radial-gradient(
+        48% 38% at 4% 100%,
+        color-mix(in srgb, var(--ha-lamp), transparent 88%) 0%,
+        transparent 66%
+      ),
+    radial-gradient(
+      52% 40% at 88% -6%,
+      color-mix(in srgb, var(--ha-cerulean), transparent 72%) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 52%
+    );
+  background-repeat: no-repeat;
+  background-size:
+    300px auto,
+    auto,
+    auto,
+    auto;
+  background-position:
+    right -64px top -56px,
+    center,
+    center,
+    center;
+  background-attachment: fixed;
+}
+
+/* Papel de arroz: dos tramas cruzadas a muy baja opacidad. Es lo que le quita
+   al fondo el aspecto de color plano sin costar nada: son dos degradados
+   repetidos, estáticos, por detrás de todo. */
+html.theme-herbal-apothecary body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(232, 239, 233, 0.022) 0 1px,
+      transparent 1px 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(232, 239, 233, 0.018) 0 1px,
+      transparent 1px 5px
+    );
+}
+
+/* Motas de polvo subiendo en la luz del candil. Mismo mecanismo que la lluvia
+   y los pétalos de los otros temas: un mosaico que se repite y se mueve entero
+   con transform un recorrido igual a su alto, así que el bucle no salta. Suben
+   en vez de caer, que es lo que hace el polvo en una habitación cerrada con
+   una llama encendida. */
+html.theme-herbal-apothecary body::after {
+  content: '';
+  position: fixed;
+  inset: -15%;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      1.6px 1.6px at 16% 18%,
+      color-mix(in srgb, var(--ha-lamp), transparent 45%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 44% 62%,
+      color-mix(in srgb, var(--ha-sprout-soft), transparent 55%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.8px 1.8px at 72% 30%,
+      color-mix(in srgb, var(--ha-lamp), transparent 55%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.3px 1.3px at 88% 78%,
+      color-mix(in srgb, var(--ha-sprout-soft), transparent 60%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.4px 1.4px at 28% 88%,
+      color-mix(in srgb, var(--ha-lamp), transparent 62%),
+      transparent 70%
+    );
+  background-size: 340px 420px;
+  opacity: 0.5;
+  animation: haMotes 26s linear infinite;
+}
+
+@keyframes haMotes {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-420px);
+  }
+}
+
+html.theme-herbal-apothecary .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-herbal-apothecary body::after {
+    animation: none;
+  }
+  html.theme-herbal-apothecary .progress-fill::before,
+  html.theme-herbal-apothecary .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- Anaqueles ------------------------------------------------------------ */
+/* Los paneles son los cajones del boticario: madera verde en penumbra, borde
+   cerúleo y un filo de jade arriba, que es donde da la luz. */
+
+html.theme-herbal-apothecary .sidebar {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 14%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid color-mix(in srgb, var(--ha-jade), transparent 68%);
+}
+
+html.theme-herbal-apothecary .panel,
+html.theme-herbal-apothecary .stat-card,
+html.theme-herbal-apothecary .hero-card,
+html.theme-herbal-apothecary .logs-hero,
+html.theme-herbal-apothecary .listener-hero {
+  background-color: color-mix(in srgb, var(--user-surface), transparent 10%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: color-mix(in srgb, var(--ha-cerulean), transparent 42%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ha-jade), transparent 62%),
+    var(--ha-shadow);
+}
+
+/* La tarjeta grande es la mesa de trabajo bajo el candil. */
+html.theme-herbal-apothecary .hero-card {
+  background-image: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--user-surface-light), transparent 6%) 0%,
+    color-mix(in srgb, var(--user-surface), transparent 8%) 58%,
+    color-mix(in srgb, var(--ha-lamp), var(--user-surface) 88%) 100%
+  );
+}
+
+html.theme-herbal-apothecary .hero-card:after {
+  background: radial-gradient(circle, var(--ha-lamp) 0%, transparent 66%);
+  opacity: 0.16;
+  filter: blur(22px);
+}
+
+html.theme-herbal-apothecary .toast {
+  box-shadow: var(--ha-shadow);
+}
+
+/* --- Navegación ----------------------------------------------------------- */
+/* La pestaña activa va en cerúleo, que es el color del manto: el verde queda
+   para lo que está vivo (botones, estado, progreso). */
+
+html.theme-herbal-apothecary .sidebar-nav button:hover {
+  background: color-mix(in srgb, var(--ha-jade), transparent 88%);
+  color: var(--ha-sprout-soft);
+}
+
+html.theme-herbal-apothecary .sidebar-nav button.selected {
+  background: color-mix(
+    in srgb,
+    var(--ha-cerulean),
+    transparent 45%
+  ) !important;
+  color: #e8efe9;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+html.theme-herbal-apothecary .sidebar-nav button.selected::before {
+  background-color: var(--ha-sprout);
+}
+html.theme-herbal-apothecary .sidebar-nav button.selected span {
+  color: var(--ha-sprout);
+}
+
+@media (max-width: 900px) {
+  html.theme-herbal-apothecary .sidebar-nav button.selected {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* --- Frascos y pociones --------------------------------------------------- */
+/* La barra de progreso es el líquido subiendo en el frasco: el degradado del
+   tema con unas bandas suaves en diagonal encima. Misma técnica que los demás:
+   capa propia movida con transform y recorrido fijo, para que el avance se vea
+   igual con la barra corta que con la barra llena. Patrón a 110° con periodo
+   de 13px sobre su eje: en horizontal repite cada 13 / sen(110°) = 13,83px, y
+   el recorrido, 27,67px, son dos periodos justos. */
+
+html.theme-herbal-apothecary .progress-fill,
+html.theme-herbal-apothecary .disk-bar .fill,
+html.theme-herbal-apothecary .update-progress-fill {
+  background-image: var(--user-gradient);
+  box-shadow:
+    inset 0 1px 0 rgba(232, 239, 233, 0.3),
+    0 0 12px var(--user-glow);
+}
+
+html.theme-herbal-apothecary .progress-track {
+  background: color-mix(in srgb, var(--user-bg-base), transparent 25%);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--ha-cerulean), transparent 62%);
+}
+
+html.theme-herbal-apothecary .progress-fill,
+html.theme-herbal-apothecary .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+html.theme-herbal-apothecary .progress-fill::before,
+html.theme-herbal-apothecary .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -30px;
+  background-image: repeating-linear-gradient(
+    110deg,
+    rgba(232, 239, 233, 0.22) 0 4px,
+    rgba(20, 31, 24, 0.12) 4px 13px
+  );
+  animation: haLiquor 2s linear infinite;
+}
+
+@keyframes haLiquor {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-27.67px);
+  }
+}
+
+html.theme-herbal-apothecary .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      110deg,
+      rgba(232, 239, 233, 0.22) 0 4px,
+      rgba(20, 31, 24, 0.12) 4px 13px
+    ),
+    var(--user-gradient);
+}
+
+/* --- Estados -------------------------------------------------------------- */
+
+html.theme-herbal-apothecary .status-dot,
+html.theme-herbal-apothecary .live-dot {
+  background: var(--ha-sprout);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ha-sprout), transparent 45%);
+}
+html.theme-herbal-apothecary .status-dot.disconnected {
+  background: var(--ha-venom);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ha-venom), transparent 45%);
+}
+html.theme-herbal-apothecary .sidebar-status.is-disconnected {
+  color: var(--ha-venom-light);
+  background: color-mix(in srgb, var(--ha-venom), transparent 92%);
+  border-color: color-mix(in srgb, var(--ha-venom), transparent 82%);
+}
+
+html.theme-herbal-apothecary .badge,
+html.theme-herbal-apothecary .save-state {
+  background: color-mix(in srgb, var(--ha-sprout), transparent 88%);
+  color: var(--ha-sprout-soft);
+  border-color: color-mix(in srgb, var(--ha-sprout), transparent 74%);
+}
+
+html.theme-herbal-apothecary .count-pill {
+  background: color-mix(in srgb, var(--ha-cerulean), transparent 58%);
+  color: var(--ha-cerulean-light);
+}
+
+html.theme-herbal-apothecary .sidebar-user-badge .user-icon {
+  color: var(--ha-sprout);
+}
+
+/* Lo destructivo y lo roto, en bermellón. */
+html.theme-herbal-apothecary .row-side button,
+html.theme-herbal-apothecary .delete-button,
+html.theme-herbal-apothecary .sidebar-user-badge .logout-btn {
+  color: var(--ha-venom-light);
+}
+html.theme-herbal-apothecary .row-side button:hover,
+html.theme-herbal-apothecary .delete-button:hover,
+html.theme-herbal-apothecary .sidebar-user-badge .logout-btn:hover {
+  color: #ffd5cc;
+  background: color-mix(in srgb, var(--ha-venom), transparent 80%);
+}
+html.theme-herbal-apothecary .row-side .pause-action {
+  color: var(--ha-lamp);
+}
+html.theme-herbal-apothecary .row-side .resume-action {
+  color: var(--ha-sprout);
+}
+
+html.theme-herbal-apothecary .toast.danger {
+  background: color-mix(in srgb, var(--ha-venom), var(--user-surface) 82%);
+  color: #ffd5cc;
+  border: 1px solid color-mix(in srgb, var(--ha-venom), transparent 58%);
+}
+
+html.theme-herbal-apothecary .inline-link,
+html.theme-herbal-apothecary .inline-link:visited {
+  color: var(--ha-cerulean-light);
+}
+html.theme-herbal-apothecary .inline-link:hover {
+  color: var(--ha-sprout-soft);
+}
+html.theme-herbal-apothecary .inline-link:focus-visible {
+  outline-color: var(--ha-cerulean-light);
+}
+
+/* --- Detalles ------------------------------------------------------------- */
+
+html.theme-herbal-apothecary .stat-icon.blue {
+  background: color-mix(in srgb, var(--ha-jade), transparent 72%);
+  color: var(--ha-sprout);
+}
+html.theme-herbal-apothecary .stat-icon.amber {
+  background: color-mix(in srgb, var(--ha-lamp), transparent 84%);
+  color: var(--ha-lamp);
+}
+html.theme-herbal-apothecary .stat-icon.green {
+  background: color-mix(in srgb, var(--ha-cerulean), transparent 62%);
+  color: var(--ha-cerulean-light);
+}
+html.theme-herbal-apothecary .stat-icon.gray {
+  background: color-mix(in srgb, var(--user-text-dim), transparent 88%);
+  color: var(--user-text-dim);
+}
+
+/* El botón del interruptor, otra vez el mismo caso: el relleno encendido es un
+   verde claro y el blanco fijo del panel encima no destaca. Va al verde noche
+   del fondo, que es además el color del texto de los botones de este tema. */
+html.theme-herbal-apothecary .switch input:checked + span:after,
+html.theme-herbal-apothecary .chat-name-mode-btn.active .chat-switch-thumb {
+  background: var(--user-bg-base);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+html.theme-herbal-apothecary ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+html.theme-herbal-apothecary ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.theme-herbal-apothecary ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ha-jade), transparent 35%);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+html.theme-herbal-apothecary ::-webkit-scrollbar-thumb:hover {
+  background: var(--ha-sprout);
+  background-clip: content-box;
+}
+
+html.theme-herbal-apothecary .boot-screen,
+html.theme-herbal-apothecary .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 52%
+  );
+}
+
+/* =============================================================================
+   Darling Red (color 22)   ·   tema oscuro
+   La cabina del Strelitzia. A diferencia del resto de temas aqui las tarjetas
+   NO son gris oscuro: van en carmesi, que es lo que pidio Frank a partir de su
+   referencia. El rosa queda para lo secundario, el cian es la maquina (titulo,
+   conexion, progreso, aros de los iconos) y el blanco hueso es el fondo de los
+   botones de accion, como decia su paleta.
+
+   La barra lateral va en vino, mas oscura y mas morada que las tarjetas: es la
+   unica forma de que se distinga de ellas sin dejarla en gris.
+
+   Nada de tramas de lineas en el fondo (Frank las quito expresamente de la
+   referencia). Queda una sola capa animada: las chispas del HUD.
+   -------------------------------------------------------------------------- */
+html.theme-darling-red {
+  --dr-crimson: #d32f2f;
+  --dr-crimson-deep: #c62828;
+  /* El carmesi sobre el gris noche se queda en 3,8:1, asi que como TEXTO va
+     esta version aclarada (8,3:1) y el original solo para rellenos y bordes.
+     Mismo criterio que el bermellon de Herbal Apothecary. */
+  --dr-crimson-light: #ff8a80;
+  --dr-pink: #f48fb1;
+  --dr-pink-suave: #f8bbd0;
+  --dr-cyan: #00e5ff;
+  --dr-cyan-vivid: #18ffff;
+  /* El cian puro en un titulo de 30px deslumbra; el de la referencia es mas
+     apagado. */
+  --dr-cyan-soft: #45c5d6;
+  /* El celeste palido de los remates del HUD: en la referencia las lineas no
+     son cian puro, tiran a azul acero. */
+  --dr-hud: #9fd9e6;
+  --dr-bone: #f5f5f5;
+  /* Las tarjetas: carmesi que se apaga hacia la derecha. Apagado a proposito
+     respecto a la referencia, que a pantalla completa cansaba. */
+  --dr-plate: linear-gradient(100deg, #5f1523 0%, #481019 52%, #3a0c15 100%);
+  /* La barra lateral es el MISMO carmesi, un par de pasos mas oscuro: se
+     distingue por valor, no por tono. Antes iba en vino morado y se veia como
+     otro tema pegado al lado. */
+  --dr-wine-high: #4a1119;
+  --dr-wine-low: #330c13;
+  --dr-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+/* --- La cabina ------------------------------------------------------------ */
+
+html.theme-darling-red body {
+  background-image:
+    radial-gradient(
+      44% 34% at 2% 98%,
+      color-mix(in srgb, var(--dr-cyan), transparent 90%) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      64% 46% at 78% -10%,
+      color-mix(in srgb, var(--dr-crimson), transparent 74%) 0%,
+      transparent 66%
+    ),
+    radial-gradient(
+      circle at 70% -12%,
+      var(--user-bg-top) 0,
+      var(--user-bg-base) 52%
+    );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Chispas del HUD subiendo. Mismo mecanismo que la lluvia, los petalos y las
+   motas de los otros temas: un mosaico que se repite y se mueve entero con
+   transform un recorrido igual a su alto, asi que el bucle no salta. Es la
+   unica capa animada del fondo. */
+html.theme-darling-red body::after {
+  content: '';
+  position: fixed;
+  inset: -15%;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      1.7px 1.7px at 14% 22%,
+      color-mix(in srgb, var(--dr-cyan), transparent 40%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.2px 1.2px at 42% 66%,
+      color-mix(in srgb, var(--dr-pink), transparent 50%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.9px 1.9px at 70% 34%,
+      color-mix(in srgb, var(--dr-cyan), transparent 55%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.3px 1.3px at 86% 74%,
+      color-mix(in srgb, var(--dr-pink-suave), transparent 58%),
+      transparent 70%
+    ),
+    radial-gradient(
+      1.5px 1.5px at 26% 90%,
+      color-mix(in srgb, var(--dr-crimson-light), transparent 60%),
+      transparent 70%
+    );
+  background-size: 360px 440px;
+  opacity: 0.5;
+  animation: drSparks 24s linear infinite;
+}
+
+@keyframes drSparks {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-440px);
+  }
+}
+
+html.theme-darling-red .app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-darling-red body::after {
+    animation: none;
+  }
+  html.theme-darling-red .progress-fill::before,
+  html.theme-darling-red .disk-bar .fill::before {
+    animation: none;
+  }
+}
+
+/* --- La barra lateral ----------------------------------------------------- */
+/* En vino, no en gris: mas oscura y mas morada que las tarjetas para que se
+   note que es otra zona. El filo carmesi de la derecha es lo que la separa del
+   contenido. */
+
+html.theme-darling-red .sidebar {
+  background-image: linear-gradient(
+    180deg,
+    var(--dr-wine-high) 0%,
+    var(--dr-wine-low) 100%
+  );
+  border-right: 1px solid color-mix(in srgb, var(--dr-crimson), transparent 42%);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.38);
+}
+
+html.theme-darling-red .sidebar-nav button:hover {
+  background: color-mix(in srgb, var(--dr-crimson), transparent 76%);
+  color: var(--dr-pink-suave);
+  transform: translateX(3px);
+}
+
+html.theme-darling-red .sidebar-nav button.selected {
+  background: color-mix(in srgb, var(--dr-crimson), transparent 32%) !important;
+  color: var(--dr-bone);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+html.theme-darling-red .sidebar-nav button.selected::before {
+  background-color: var(--dr-cyan);
+}
+html.theme-darling-red .sidebar-nav button.selected span {
+  color: var(--dr-cyan);
+}
+
+@media (max-width: 900px) {
+  html.theme-darling-red .sidebar-nav button.selected {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Las dos cajas de la barra usan --user-bg-base y --user-surface-light, que
+   sobre el vino se ven como parches de otro tema. Van a vino translucido. */
+html.theme-darling-red .sidebar-user-badge {
+  background: rgba(0, 0, 0, 0.26);
+  border-color: color-mix(in srgb, var(--dr-crimson), transparent 58%);
+}
+html.theme-darling-red .sidebar-status {
+  background: rgba(0, 0, 0, 0.26);
+  color: var(--dr-pink-suave);
+}
+
+/* --- La barra superior ---------------------------------------------------- */
+/* El titulo en cian: en la referencia es lo que marca de que va el tema. */
+
+html.theme-darling-red .topbar h1 {
+  color: var(--dr-cyan-soft);
+}
+
+/* --- Las placas ----------------------------------------------------------- */
+/* Aqui esta el cambio gordo respecto al resto de temas: el relleno de las
+   tarjetas es carmesi, no gris oscuro. Sigue siendo oscuro en luminancia
+   (0,047, como un gris #3a3a3a), asi que todo el texto claro fijo del panel
+   se lee igual y no hace falta el bloque de temas claros. */
+
+html.theme-darling-red .stat-card {
+  background-image: var(--dr-plate);
+  border-color: color-mix(in srgb, var(--dr-pink), transparent 72%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--dr-pink-suave), transparent 84%),
+    var(--dr-shadow);
+}
+
+html.theme-darling-red .panel,
+html.theme-darling-red .logs-hero,
+html.theme-darling-red .listener-hero {
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M1%2024%20V15%20A14%2014%200%200%201%2015%201%20H24'%20fill='none'%20stroke='%2300e5ff'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M0%2023%20H9%20A14%2014%200%200%200%2023%209%20V0'%20fill='none'%20stroke='%23f48fb1'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+    var(--dr-plate);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size:
+    22px 22px,
+    22px 22px,
+    auto;
+  background-position:
+    left top,
+    right bottom,
+    center;
+  border-color: color-mix(in srgb, var(--dr-pink), transparent 72%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--dr-pink-suave), transparent 84%),
+    var(--dr-shadow);
+}
+
+html.theme-darling-red .hero-card {
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2060'%3E%3Cpath%20d='M0%2010%20H72%20L86%2024%20H206%20L218%2036%20H320'%20fill='none'%20stroke='%239fd9e6'%20stroke-width='2'%20stroke-linejoin='miter'%20opacity='.8'/%3E%3Cg%20stroke='%2300e5ff'%20stroke-width='2.4'%20stroke-linecap='round'%20opacity='.9'%3E%3Cpath%20d='M238%2034%20l9%20-11'/%3E%3Cpath%20d='M251%2034%20l9%20-11'/%3E%3Cpath%20d='M264%2034%20l9%20-11'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M1%2024%20V15%20A14%2014%200%200%201%2015%201%20H24'%20fill='none'%20stroke='%2300e5ff'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M0%2023%20H9%20A14%2014%200%200%200%2023%209%20V0'%20fill='none'%20stroke='%23f48fb1'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+    radial-gradient(
+      52% 120% at 88% -20%,
+      color-mix(in srgb, var(--dr-crimson), transparent 70%) 0%,
+      transparent 70%
+    ),
+    var(--dr-plate);
+  background-repeat: no-repeat;
+  background-size:
+    320px 60px,
+    26px 26px,
+    26px 26px,
+    auto,
+    auto;
+  background-position:
+    right 0 top 0,
+    left top,
+    right bottom,
+    center,
+    center;
+  border-color: color-mix(in srgb, var(--dr-pink), transparent 66%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--dr-pink-suave), transparent 78%),
+    var(--dr-shadow);
+}
+
+html.theme-darling-red .toast {
+  box-shadow: var(--dr-shadow);
+}
+
+/* --- Los remates del HUD -------------------------------------------------- */
+/* Son los detalles celestes de la referencia. Van en tres piezas:
+
+   - Las ESCUADRAS de las esquinas, ahora como capas de fondo en SVG (antes
+     eran los pseudoelementos). Se cambiaron de sitio porque solo hay dos
+     pseudos por caja y las pinzas los necesitan; como capa de fondo ademas se
+     colocan en la esquina sin tener que calcular nada.
+   - Las PINZAS laterales, la linea vertical con los extremos en diagonal que
+     en la foto va pegada a los bordes izquierdo y derecho de las tarjetas
+     grandes. Cada una son tres degradados: dos cuadrados de 13px con una
+     diagonal a 45 grados (la banda sale perpendicular al eje del degradado,
+     por eso el de arriba va a 45deg y el de abajo a 135deg) y una barra de
+     2px entre ellos.
+   - El REMATE escalonado con las tres marcas, arriba a la derecha de la
+     tarjeta grande. Mide 320px fijos, asi que se retira en movil: en una
+     tarjeta estrecha se veria cortado por la mitad. */
+
+html.theme-darling-red .panel {
+  position: relative;
+}
+
+html.theme-darling-red .hero-card::before,
+html.theme-darling-red .hero-card:after,
+html.theme-darling-red .panel::before,
+html.theme-darling-red .panel::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  width: 13px;
+  height: min(58%, 132px);
+  pointer-events: none;
+  background-repeat: no-repeat;
+  /* El `:after` de la tarjeta grande era el halo redondo de style.css: hay que
+     apagarle el radio, el desenfoque y el tamano que traia de alli. Y sobre
+     todo el COLOR DE FONDO: alli va como `background: var(--user-glow)`, que
+     es un color, no una imagen, asi que cambiarle el `background-image` no lo
+     quita y queda un rectangulo rojizo detras de la pinza. */
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  filter: none;
+  opacity: 0.9;
+}
+
+html.theme-darling-red .hero-card::before,
+html.theme-darling-red .panel::before {
+  left: 0;
+  right: auto;
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent calc(50% - 1px),
+      var(--dr-hud) calc(50% - 1px),
+      var(--dr-hud) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(var(--dr-hud), var(--dr-hud)),
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1px),
+      var(--dr-hud) calc(50% - 1px),
+      var(--dr-hud) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  background-size:
+    13px 13px,
+    2px calc(100% - 26px),
+    13px 13px;
+  background-position:
+    left top,
+    right 0 top 13px,
+    left bottom;
+}
+
+html.theme-darling-red .hero-card:after,
+html.theme-darling-red .panel::after {
+  right: 0;
+  left: auto;
+  background-image:
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1px),
+      var(--dr-hud) calc(50% - 1px),
+      var(--dr-hud) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(var(--dr-hud), var(--dr-hud)),
+    linear-gradient(
+      45deg,
+      transparent calc(50% - 1px),
+      var(--dr-hud) calc(50% - 1px),
+      var(--dr-hud) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  background-size:
+    13px 13px,
+    2px calc(100% - 26px),
+    13px 13px;
+  background-position:
+    left top,
+    left 0 top 13px,
+    left bottom;
+}
+
+@media (max-width: 900px) {
+  html.theme-darling-red .hero-card {
+    background-image:
+      url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M1%2024%20V15%20A14%2014%200%200%201%2015%201%20H24'%20fill='none'%20stroke='%2300e5ff'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20d='M0%2023%20H9%20A14%2014%200%200%200%2023%209%20V0'%20fill='none'%20stroke='%23f48fb1'%20stroke-width='2'%20stroke-linecap='square'/%3E%3C/svg%3E"),
+      radial-gradient(
+        52% 120% at 88% -20%,
+        color-mix(in srgb, var(--dr-crimson), transparent 70%) 0%,
+        transparent 70%
+      ),
+      var(--dr-plate);
+    background-size:
+      22px 22px,
+      22px 22px,
+      auto,
+      auto;
+    background-position:
+      left top,
+      right bottom,
+      center,
+      center;
+  }
+  html.theme-darling-red .hero-card::before,
+  html.theme-darling-red .hero-card:after,
+  html.theme-darling-red .panel::before,
+  html.theme-darling-red .panel::after {
+    display: none;
+  }
+}
+
+/* --- Botones de accion ---------------------------------------------------- */
+/* Fondo blanco hueso con la letra en carmesi. Es lo que pedia la paleta
+   ("blanco: fondos de boton activo") y lo que hace la referencia; ademas
+   resuelve solo el problema de siempre, porque sobre el hueso la letra oscura
+   que ya traia el panel (`var(--user-bg-base)`) se lee de sobra. */
+html.theme-darling-red .primary-button,
+html.theme-darling-red .save-button,
+html.theme-darling-red .auth-button.primary,
+html.theme-darling-red .update-btn,
+html.theme-darling-red .pager-btn.active {
+  background: linear-gradient(135deg, #ffffff 0%, #f2d9dc 100%);
+  color: #3a0710 !important;
+  border-color: transparent;
+}
+html.theme-darling-red .primary-button:hover:not(:disabled),
+html.theme-darling-red .save-button:hover:not(:disabled) {
+  box-shadow: 0 9px 24px color-mix(in srgb, var(--dr-crimson), transparent 55%);
+}
+
+/* --- Campos --------------------------------------------------------------- */
+/* Usan --user-bg-base, que aqui es casi negro y al lado del carmesi de la
+   tarjeta parece un agujero. Van a un carmesi mas hondo que la placa. */
+html.theme-darling-red .download-form input,
+html.theme-darling-red .speed-row input,
+html.theme-darling-red .speed-row select,
+html.theme-darling-red .token-row input {
+  background: rgba(30, 3, 12, 0.62);
+  border-color: color-mix(in srgb, var(--dr-crimson), transparent 52%);
+}
+
+/* --- Indicadores del HUD -------------------------------------------------- */
+/* La barra NO usa el degradado del tema: la paleta manda el cian para el
+   progreso y la conexion, que es lo de la maquina, y el carmesi se queda en
+   placas y botones. Encima va el barrido, con la misma tecnica de los demas
+   temas: capa propia movida con transform y recorrido fijo, para que el avance
+   se vea igual con la barra corta que con la barra llena. Patron a 105 grados
+   con periodo de 12px sobre su eje: en horizontal repite cada
+   12 / sen(105) = 12,42px, y el recorrido, 24,85px, son dos periodos justos. */
+
+html.theme-darling-red .progress-fill,
+html.theme-darling-red .disk-bar .fill,
+html.theme-darling-red .update-progress-fill {
+  background-image: linear-gradient(
+    120deg,
+    #0097a7 0%,
+    var(--dr-cyan) 52%,
+    var(--dr-cyan-vivid) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(245, 245, 245, 0.32),
+    0 0 12px color-mix(in srgb, var(--dr-cyan), transparent 55%);
+}
+
+html.theme-darling-red .progress-track,
+html.theme-darling-red .disk-bar {
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--dr-cyan), transparent 78%);
+}
+
+html.theme-darling-red .progress-fill,
+html.theme-darling-red .disk-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+
+html.theme-darling-red .progress-fill::before,
+html.theme-darling-red .disk-bar .fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -28px;
+  background-image: repeating-linear-gradient(
+    105deg,
+    rgba(245, 245, 245, 0.26) 0 3px,
+    rgba(18, 18, 22, 0.16) 3px 12px
+  );
+  animation: drSweep 1.8s linear infinite;
+}
+
+@keyframes drSweep {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-24.85px);
+  }
+}
+
+html.theme-darling-red .update-progress-fill {
+  background-image:
+    repeating-linear-gradient(
+      105deg,
+      rgba(245, 245, 245, 0.26) 0 3px,
+      rgba(18, 18, 22, 0.16) 3px 12px
+    ),
+    linear-gradient(
+      120deg,
+      #0097a7 0%,
+      var(--dr-cyan) 52%,
+      var(--dr-cyan-vivid) 100%
+    );
+}
+
+/* --- Iconos --------------------------------------------------------------- */
+/* Todos con aro cian, como en la referencia. El interior va casi negro para
+   que el aro despegue del carmesi de la placa; el simbolo cambia de color
+   segun el estado, que es lo unico que queda de la codificacion original. */
+
+html.theme-darling-red .stat-icon {
+  background: rgba(20, 2, 9, 0.72);
+  border: 1.5px solid color-mix(in srgb, var(--dr-cyan), transparent 30%);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--dr-cyan), transparent 72%),
+    inset 0 0 8px color-mix(in srgb, var(--dr-cyan), transparent 88%);
+}
+html.theme-darling-red .stat-icon.blue {
+  color: var(--dr-cyan);
+}
+html.theme-darling-red .stat-icon.amber {
+  color: var(--dr-pink);
+}
+html.theme-darling-red .stat-icon.green {
+  color: var(--dr-cyan-vivid);
+}
+html.theme-darling-red .stat-icon.gray {
+  color: var(--dr-bone);
+}
+
+/* Los iconos de fichero traen el carmesi del tema sobre un fondo tambien
+   carmesi: 2,9:1. Van al rosa. */
+html.theme-darling-red .file-symbol,
+html.theme-darling-red .recent-icon {
+  background: rgba(20, 2, 9, 0.6);
+  color: var(--dr-pink);
+}
+
+html.theme-darling-red .sidebar-user-badge .user-icon {
+  color: var(--dr-pink);
+}
+
+/* --- Estados -------------------------------------------------------------- */
+
+html.theme-darling-red .status-dot,
+html.theme-darling-red .live-dot {
+  background: var(--dr-cyan);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dr-cyan), transparent 40%);
+}
+html.theme-darling-red .status-dot.disconnected {
+  background: var(--dr-crimson-light);
+  box-shadow: 0 0 10px
+    color-mix(in srgb, var(--dr-crimson-light), transparent 40%);
+}
+html.theme-darling-red .sidebar-status.is-disconnected {
+  color: var(--dr-crimson-light);
+  background: rgba(0, 0, 0, 0.3);
+  border-color: color-mix(in srgb, var(--dr-crimson-light), transparent 70%);
+}
+
+html.theme-darling-red .badge,
+html.theme-darling-red .save-state {
+  background: rgba(20, 2, 9, 0.5);
+  color: var(--dr-pink-suave);
+  border-color: color-mix(in srgb, var(--dr-pink), transparent 66%);
+}
+
+html.theme-darling-red .count-pill {
+  background: rgba(20, 2, 9, 0.5);
+  color: var(--dr-cyan);
+}
+
+/* Lo destructivo y lo roto: sobre el carmesi de la placa el rojo ya no
+   distingue nada, asi que va en rosa claro y se enciende al hueso. */
+html.theme-darling-red .row-side button,
+html.theme-darling-red .delete-button,
+html.theme-darling-red .sidebar-user-badge .logout-btn {
+  color: var(--dr-pink-suave);
+}
+html.theme-darling-red .row-side button:hover,
+html.theme-darling-red .delete-button:hover,
+html.theme-darling-red .sidebar-user-badge .logout-btn:hover {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+}
+html.theme-darling-red .row-side .pause-action {
+  color: var(--dr-pink);
+}
+html.theme-darling-red .row-side .resume-action {
+  color: var(--dr-cyan);
+}
+
+html.theme-darling-red .toast.danger {
+  background: linear-gradient(100deg, #6e141f 0%, #4c101a 100%);
+  color: #ffe6e3;
+  border: 1px solid color-mix(in srgb, var(--dr-crimson-light), transparent 60%);
+}
+
+html.theme-darling-red .inline-link,
+html.theme-darling-red .inline-link:visited {
+  color: var(--dr-cyan);
+}
+html.theme-darling-red .inline-link:hover {
+  color: var(--dr-pink-suave);
+}
+html.theme-darling-red .inline-link:focus-visible {
+  outline-color: var(--dr-cyan);
+}
+
+/* --- Controles ------------------------------------------------------------ */
+
+/* El deslizante. Chromium elige el color de la parte no rellena de la pista a
+   partir del `accent-color`, y con el carmesi la pinta BLANCA: una mancha
+   (con el azul de osX o el verde de Herbal la pinta gris oscuro y por eso alli
+   no pasa). En vez de repintar la pista a mano, que obliga a renunciar al
+   relleno de color en Chromium, el deslizante pasa al cian, que es justo lo
+   que la paleta pide para progreso e indicadores. */
+html.theme-darling-red .range-input {
+  accent-color: var(--dr-cyan);
+}
+
+/* El interruptor encendido se pinta sobre el carmesi, que es oscuro: aqui el
+   boton blanco fijo del panel si se ve. Solo se le sube la sombra y la pista
+   apagada baja a negro, que sobre la placa carmesi no se distinguia. */
+html.theme-darling-red .switch span {
+  background: rgba(0, 0, 0, 0.45);
+}
+html.theme-darling-red .switch input:checked + span {
+  background: var(--dr-crimson);
+}
+html.theme-darling-red .switch input:checked + span:after {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+html.theme-darling-red ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+html.theme-darling-red ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.theme-darling-red ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--dr-crimson), transparent 30%);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+html.theme-darling-red ::-webkit-scrollbar-thumb:hover {
+  background: var(--dr-pink);
+  background-clip: content-box;
+}
+
+html.theme-darling-red .boot-screen,
+html.theme-darling-red .update-required-overlay {
+  background-image: radial-gradient(
+    circle at 70% -12%,
+    var(--user-bg-top) 0,
+    var(--user-bg-base) 52%
+  );
+}
+
+/* -----------------------------------------------------------------------------
+   UDYAT (color 23)   ·   tema oscuro
+   Inspirado en el lenguaje visual de Apple TV+ y tvOS: negro profundo OLED,
+   capas elevadas translúcidas con efecto vidrio esmerilado (glassmorphism),
+   sutiles resplandores azul eléctrico (#007AFF), bordes refinados con reflejo
+   especular y tarjetas con alta legibilidad.
+   -------------------------------------------------------------------------- */
+
+html.theme-udyat {
+  color-scheme: dark;
+
+  --apple-tv-bg-base: #000000;
+  --apple-tv-bg-surface: #121212;
+  --apple-tv-bg-elevated: #1c1c1e;
+  --apple-tv-text-primary: #ffffff;
+  --apple-tv-text-secondary: #8e8e93;
+  --apple-tv-accent-blue: #007aff;
+  --apple-tv-glass-subtle: rgba(255, 255, 255, 0.08);
+  --apple-tv-glass-medium: rgba(255, 255, 255, 0.15);
+  --apple-tv-glass-blur: blur(40px);
+
+  --udyat-glow: rgba(0, 122, 255, 0.35);
+  --udyat-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  --udyat-border: rgba(255, 255, 255, 0.1);
+  --udyat-border-hover: rgba(255, 255, 255, 0.22);
+}
+
+/* --- Fondo ---------------------------------------------------------------- */
+
+html.theme-udyat body {
+  background-color: var(--apple-tv-bg-base);
+  background-image:
+    radial-gradient(
+      900px circle at 50% -120px,
+      rgba(0, 122, 255, 0.18),
+      transparent 75%
+    ),
+    radial-gradient(
+      700px circle at 85% 105%,
+      rgba(0, 122, 255, 0.08),
+      transparent 70%
+    );
+  background-attachment: fixed;
+  color: var(--apple-tv-text-primary);
+}
+
+/* --- Barra lateral (tvOS glass sidebar) ----------------------------------- */
+
+html.theme-udyat .sidebar {
+  background: rgba(18, 18, 18, 0.72);
+  backdrop-filter: var(--apple-tv-glass-blur);
+  -webkit-backdrop-filter: var(--apple-tv-glass-blur);
+  border-right: 1px solid var(--apple-tv-glass-subtle);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+}
+
+html.theme-udyat .sidebar-nav button {
+  border-radius: 12px;
+  transition:
+    background 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html.theme-udyat .sidebar-nav button:hover {
+  background: var(--apple-tv-glass-medium);
+  color: var(--apple-tv-text-primary);
+  transform: scale(1.02);
+}
+
+html.theme-udyat .sidebar-nav button.selected {
+  background: var(--apple-tv-accent-blue) !important;
+  color: #ffffff;
+  box-shadow: 0 4px 20px var(--udyat-glow);
+}
+
+html.theme-udyat .sidebar-nav button.selected span {
+  color: #ffffff;
+}
+
+html.theme-udyat .sidebar-user-badge,
+html.theme-udyat .sidebar-status {
+  background: var(--apple-tv-glass-subtle);
+  border: 1px solid var(--apple-tv-glass-subtle);
+  border-radius: 12px;
+  color: var(--apple-tv-text-secondary);
+}
+
+/* --- Encabezado ----------------------------------------------------------- */
+
+html.theme-udyat .topbar h1 {
+  color: var(--apple-tv-text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* --- Tarjetas y Paneles (tvOS elevated glass surfaces) ------------------ */
+
+html.theme-udyat .stat-card,
+html.theme-udyat .panel,
+html.theme-udyat .logs-hero,
+html.theme-udyat .listener-hero,
+html.theme-udyat .hero-card {
+  background: rgba(28, 28, 30, 0.72);
+  backdrop-filter: var(--apple-tv-glass-blur);
+  -webkit-backdrop-filter: var(--apple-tv-glass-blur);
+  border: 1px solid var(--udyat-border);
+  border-radius: 18px;
+  box-shadow: var(--udyat-shadow);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html.theme-udyat .stat-card:hover,
+html.theme-udyat .panel:hover {
+  border-color: var(--udyat-border-hover);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(0, 122, 255, 0.15);
+}
+
+html.theme-udyat .stat-card strong,
+html.theme-udyat .panel h2,
+html.theme-udyat .hero-card h2 {
+  color: var(--apple-tv-text-primary);
+}
+
+/* --- Botones principales y acciones --------------------------------------- */
+
+html.theme-udyat .primary-button,
+html.theme-udyat .save-button,
+html.theme-udyat .auth-button.primary,
+html.theme-udyat .update-btn,
+html.theme-udyat .pager-btn.active {
+  background: var(--apple-tv-accent-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px var(--udyat-glow);
+  transition:
+    background 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html.theme-udyat .primary-button:hover:not(:disabled),
+html.theme-udyat .save-button:hover:not(:disabled) {
+  background: #0062cc;
+  box-shadow: 0 6px 24px rgba(0, 122, 255, 0.5);
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* --- Formularios y Campos de Entrada ------------------------------------- */
+
+html.theme-udyat .download-form input,
+html.theme-udyat .speed-row input,
+html.theme-udyat .speed-row select,
+html.theme-udyat .token-row input {
+  background: rgba(28, 28, 30, 0.85);
+  border: 1px solid var(--udyat-border);
+  border-radius: 12px;
+  color: var(--apple-tv-text-primary);
+}
+
+html.theme-udyat .download-form input:focus,
+html.theme-udyat .speed-row input:focus,
+html.theme-udyat .token-row input:focus {
+  border-color: var(--apple-tv-accent-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+}
+
+/* --- Barras de progreso e indicadores ------------------------------------ */
+
+html.theme-udyat .progress-track,
+html.theme-udyat .disk-bar {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+
+html.theme-udyat .progress-fill,
+html.theme-udyat .disk-bar .fill,
+html.theme-udyat .update-progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--apple-tv-accent-blue) 0%,
+    #0a84ff 50%,
+    #30d158 100%
+  );
+  box-shadow: 0 0 12px var(--udyat-glow);
+  border-radius: 99px;
+}
+
+html.theme-udyat .status-dot,
+html.theme-udyat .live-dot {
+  background: var(--apple-tv-accent-blue);
+  box-shadow: 0 0 10px var(--udyat-glow);
+}
+
+html.theme-udyat .status-dot.disconnected {
+  background: #ff453a;
+  box-shadow: 0 0 10px rgba(255, 69, 58, 0.4);
+}
+
+html.theme-udyat .badge,
+html.theme-udyat .save-state {
+  background: var(--apple-tv-glass-subtle);
+  color: var(--apple-tv-text-secondary);
+  border: 1px solid var(--udyat-border);
+  border-radius: 8px;
+}
+
+html.theme-udyat .count-pill {
+  background: var(--apple-tv-glass-medium);
+  color: var(--apple-tv-text-primary);
+}
+
+html.theme-udyat .inline-link,
+html.theme-udyat .inline-link:visited {
+  color: var(--apple-tv-accent-blue);
+}
+
+html.theme-udyat .inline-link:hover {
+  color: #30d158;
+}
+
+html.theme-udyat .range-input {
+  accent-color: var(--apple-tv-accent-blue);
+}
+
+html.theme-udyat .switch span {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+html.theme-udyat .switch input:checked + span {
+  background: var(--apple-tv-accent-blue);
+}
+
+/* --- Scrollbar y pantallas de carga / actualización ----------------------- */
+
+html.theme-udyat ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.theme-udyat ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.theme-udyat ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+html.theme-udyat ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+html.theme-udyat .boot-screen,
+html.theme-udyat .update-required-overlay {
+  background-color: var(--apple-tv-bg-base);
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    rgba(0, 122, 255, 0.2) 0%,
+    var(--apple-tv-bg-base) 70%
+  );
+}

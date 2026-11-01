@@ -1,0 +1,34 @@
+# Frontend dependencies and builds
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+dashboard/wailsjs/
+dist/
+
+# Application executables and builds
+build/bin/
+*.exe
+*.exe.manifest
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Databases and system sessions
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+.env
+.telegrampv/
+tg_session.json
+telegrampv.sqlite3
+
+# IDEs and temporary files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
