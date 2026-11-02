@@ -53,6 +53,7 @@ type ClientManager struct {
 	runWg               sync.WaitGroup
 	mu                  sync.RWMutex
 	readyChan           chan struct{}
+	connErr             error
 	phoneCodeHash       string
 	pendingPhone        string
 	channelAccessHashes map[int64]int64
@@ -129,6 +130,7 @@ func (cm *ClientManager) InitClient(apiIDStr, apiHash string) error {
 
 	cm.apiID = id
 	cm.apiHash = apiHash
+	cm.connErr = nil
 	cm.readyChan = make(chan struct{})
 	readyChan := cm.readyChan
 
@@ -155,6 +157,12 @@ func (cm *ClientManager) InitClient(apiIDStr, apiHash string) error {
 	cm.runWg.Add(1)
 	go func() {
 		defer cm.runWg.Done()
+		defer func() {
+			readyOnce.Do(func() {
+				close(readyChan)
+			})
+		}()
+
 		logbus.Info(logbus.CatTelegram, i18n.T("telegram.connecting"))
 		err := client.Run(ctx, func(runCtx context.Context) error {
 			readyOnce.Do(func() {
@@ -180,6 +188,9 @@ func (cm *ClientManager) InitClient(apiIDStr, apiHash string) error {
 		})
 		if err != nil && !errors.Is(err, context.Canceled) {
 			logbus.Error(logbus.CatTelegram, i18n.T("telegram.runError", err))
+			cm.mu.Lock()
+			cm.connErr = err
+			cm.mu.Unlock()
 		}
 	}()
 
@@ -219,14 +230,24 @@ func (cm *ClientManager) Stop() {
 	cm.stopRunning()
 }
 
+func (cm *ClientManager) IsInitialized() bool {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+	return cm.client != nil && cm.apiID != 0 && cm.apiHash != ""
+}
+
 func (cm *ClientManager) WaitReady(ctx context.Context) error {
 	cm.mu.RLock()
 	ready := cm.readyChan
 	client := cm.client
+	connErr := cm.connErr
 	cm.mu.RUnlock()
 
 	if client == nil {
 		return errors.New(i18n.T("telegram.notConfigured"))
+	}
+	if connErr != nil {
+		return connErr
 	}
 	if ready == nil {
 		return nil
@@ -234,7 +255,10 @@ func (cm *ClientManager) WaitReady(ctx context.Context) error {
 
 	select {
 	case <-ready:
-		return nil
+		cm.mu.RLock()
+		err := cm.connErr
+		cm.mu.RUnlock()
+		return err
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-time.After(15 * time.Second):
@@ -347,7 +371,7 @@ func (cm *ClientManager) SendCode(ctx context.Context, phone string) (string, er
 	}
 
 	if err := cm.WaitReady(ctx); err != nil {
-		return "", fmt.Errorf(i18n.T("telegram.connectError"), err)
+		return "", err
 	}
 
 	phone = strings.TrimSpace(phone)
@@ -385,7 +409,7 @@ func (cm *ClientManager) VerifyCode(ctx context.Context, phone, code, phoneCodeH
 	}
 
 	if err := cm.WaitReady(ctx); err != nil {
-		return "", fmt.Errorf(i18n.T("telegram.connectError"), err)
+		return "", err
 	}
 
 	_, err := client.Auth().SignIn(ctx, phone, code, phoneCodeHash)
@@ -409,7 +433,7 @@ func (cm *ClientManager) TwoFactor(ctx context.Context, password string) error {
 	}
 
 	if err := cm.WaitReady(ctx); err != nil {
-		return fmt.Errorf(i18n.T("telegram.connectError"), err)
+		return err
 	}
 
 	_, err := client.Auth().Password(ctx, password)

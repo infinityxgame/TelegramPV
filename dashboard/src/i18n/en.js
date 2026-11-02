@@ -134,6 +134,7 @@ export default {
   common: {
     confirm: 'Confirm',
     cancel: 'Cancel',
+    back: 'Back',
     close: 'Close',
     error: 'Error',
     success: 'Success',

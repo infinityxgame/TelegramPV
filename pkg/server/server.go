@@ -241,9 +241,16 @@ func (s *Server) handleSendCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !s.clientMgr.IsInitialized() {
+		cfg, _ := s.storage.LoadConfig(config.DefaultConfig())
+		if cfg.ApiID != "" && cfg.ApiHash != "" {
+			_ = s.clientMgr.InitClient(cfg.ApiID, cfg.ApiHash)
+		}
+	}
+
 	phoneHash, err := s.clientMgr.SendCode(r.Context(), phone)
 	if err != nil {
-		jsonError(w, http.StatusInternalServerError, err.Error())
+		jsonError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -277,6 +284,13 @@ func (s *Server) handleSignIn(w http.ResponseWriter, r *http.Request) {
 		phone = strings.TrimSpace(req.PhoneNumber)
 	}
 
+	if !s.clientMgr.IsInitialized() {
+		cfg, _ := s.storage.LoadConfig(config.DefaultConfig())
+		if cfg.ApiID != "" && cfg.ApiHash != "" {
+			_ = s.clientMgr.InitClient(cfg.ApiID, cfg.ApiHash)
+		}
+	}
+
 	state, err := s.clientMgr.VerifyCode(r.Context(), phone, req.Code, req.PhoneCodeHash)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
@@ -301,6 +315,13 @@ func (s *Server) handleTwoFactor(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, "Invalid request JSON")
 		return
+	}
+
+	if !s.clientMgr.IsInitialized() {
+		cfg, _ := s.storage.LoadConfig(config.DefaultConfig())
+		if cfg.ApiID != "" && cfg.ApiHash != "" {
+			_ = s.clientMgr.InitClient(cfg.ApiID, cfg.ApiHash)
+		}
 	}
 
 	if err := s.clientMgr.TwoFactor(r.Context(), req.Password); err != nil {
