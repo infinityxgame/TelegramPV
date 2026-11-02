@@ -85,8 +85,12 @@ const changeLanguage = (lang) => {
             </template>
 
             <div class="settings-columns">
-              <!-- Paleta de Color de Acento y Tema -->
+              <!-- Columna Izquierda: Paleta de Color de Acento y Tema -->
               <div class="settings-group color-group">
+                <span class="setting-label">{{
+                  t('settings.accentTitle')
+                }}</span>
+
                 <span class="color-group-title">{{
                   t('settings.telegramGroup')
                 }}</span>
@@ -155,7 +159,7 @@ const changeLanguage = (lang) => {
                 </button>
               </div>
 
-              <!-- Color del Loader -->
+              <!-- Columna Derecha: Color del Loader -->
               <div class="settings-group color-group">
                 <span class="setting-label">{{
                   t('settings.loaderTitle')
@@ -324,29 +328,39 @@ const changeLanguage = (lang) => {
 .settings-accordion {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+}
+
+.color-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .setting-label {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: #f1f7ff;
+  margin-bottom: 8px;
 }
 
 .color-group-title {
   display: block;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--user-text-dim, #728ba2);
-  margin-top: 4px;
+  margin-top: 12px;
+  margin-bottom: 6px;
 }
 
 .color-selector-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 8px;
 }
 
 .color-row {
@@ -396,7 +410,7 @@ const changeLanguage = (lang) => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 4px 0;
+  margin: 6px 0 12px;
 }
 
 .theme-chip {
@@ -451,7 +465,7 @@ const changeLanguage = (lang) => {
   gap: 8px;
   width: fit-content;
   transition: all 0.2s;
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 .reset-button-alt:hover {

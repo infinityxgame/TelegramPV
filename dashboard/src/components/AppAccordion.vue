@@ -86,7 +86,7 @@ const toggle = () => {
 }
 
 .accordion-block + .accordion-block {
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .accordion-block.open {
@@ -143,7 +143,7 @@ const toggle = () => {
 }
 
 .accordion-body {
-  padding: 16px 16px 20px;
+  padding: 20px 20px 24px;
   border-top: 1px solid var(--user-border, #1b344b);
   animation: accordionOpen 0.18s ease both;
   box-sizing: border-box;
@@ -154,8 +154,8 @@ const toggle = () => {
 
 .accordion-body :deep(.settings-columns) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
-  gap: 34px;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 40px;
   align-items: start;
   min-width: 0;
 }
@@ -180,7 +180,7 @@ const toggle = () => {
     padding: 14px 12px 16px;
   }
   .accordion-body :deep(.settings-columns) {
-    gap: 20px;
+    gap: 24px;
   }
 }
 </style>
