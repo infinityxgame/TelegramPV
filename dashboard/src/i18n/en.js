@@ -113,12 +113,15 @@ export default {
     leaveAction: 'Leave / Delete'
   },
   settings: {
-    title: 'Application Settings',
+    kicker: 'PREFERENCES',
+    title: 'General Settings',
+    autosaved: 'Auto-saved',
     appearance: 'Theme & Appearance',
-    themesTitle: 'Themes & Appearance',
+    themesTitle: 'Themes & Color',
+    themesSub: 'Accent color, dashboard themes and loader color',
     accentTitle: 'Accent Color & Theme',
     telegramGroup: 'Telegram',
-    thematicGroup: 'Thematic Colors',
+    thematicGroup: 'Thematic colors',
     thematicGroupShort: 'Thematic',
     colorN: 'Color {n}',
     gradientN: 'Gradient {n}',
@@ -128,10 +131,10 @@ export default {
     colorLoaderN: 'Loader Color {n}',
     gradientLoaderN: 'Loader Gradient {n}',
     resetLoaderColor: 'Reset loader color',
-    langTitle: 'Interface Language',
-    langSub: 'Select dashboard language',
+    langTitle: 'Language',
+    langSub: 'Interface and log language',
     langNote:
-      'Your language choice will be automatically saved in your account preferences.',
+      'The first time your system language is detected automatically. Your choice is saved and applied to system logs.',
     saveSuccess: 'Settings saved successfully'
   },
   logs: {

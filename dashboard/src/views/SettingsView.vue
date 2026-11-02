@@ -1,13 +1,18 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import AppAccordion from '../components/AppAccordion.vue'
 import { useI18n } from '../i18n'
-import { Languages, Palette, Zap } from '../icons'
+import { Languages, Palette, Settings2, Zap } from '../icons'
 import { applyLoaderTheme, applyTheme, themeMap } from '../utils/theme.js'
 
 const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  saving: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -18,6 +23,9 @@ const emit = defineEmits([
 ])
 
 const { t, locale, setLocale } = useI18n()
+
+// 'themes' abierto por defecto al entrar en Ajustes
+const openSection = ref('themes')
 
 const patch = (partial) => {
   emit('update:settings', partial)
@@ -48,222 +56,275 @@ const changeLanguage = (lang) => {
 
 <template>
   <div class="settings-view">
-    <!-- 1. Temas y Colores -->
-    <div class="panel settings-card">
-      <div class="panel-heading">
-        <div class="eyebrow">
-          <Palette :size="16" />
-          <span>{{ t('settings.themesTitle') }}</span>
-        </div>
-        <h2>{{ t('settings.accentTitle') }}</h2>
-      </div>
-
-      <div class="settings-columns">
-        <!-- Paleta de Color de Acento y Tema -->
-        <div class="settings-group color-group">
-          <span class="color-group-title">{{
-            t('settings.telegramGroup')
-          }}</span>
-          <div class="color-selector-container">
-            <div class="color-row">
-              <button
-                v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
-                :key="id"
-                type="button"
-                class="color-dot"
-                :class="{ active: props.settings.color_id === id }"
-                :style="{
-                  background: themeMap[id]?.gradient || '#38a7ff'
-                }"
-                :title="t('settings.colorN', { n: id })"
-                @click="setAccentColor(id)"
-              ></button>
-            </div>
-            <div class="color-row">
-              <button
-                v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
-                :key="id"
-                type="button"
-                class="color-dot gradient-dot"
-                :class="{ active: props.settings.color_id === id }"
-                :style="{
-                  background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
-                }"
-                :title="t('settings.gradientN', { n: id })"
-                @click="setAccentColor(id)"
-              ></button>
-            </div>
+    <div class="content-grid-single">
+      <aside class="panel settings-panel-full">
+        <!-- Encabezado -->
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">
+              <Settings2 :size="12" /> {{ t('settings.kicker') }}
+            </span>
+            <h2>{{ t('settings.title') }}</h2>
           </div>
-
-          <span class="color-group-title">{{
-            t('settings.thematicGroup')
-          }}</span>
-          <div class="themes-list">
-            <button
-              v-for="id in specialThemes"
-              :key="'theme-' + id"
-              type="button"
-              class="theme-chip"
-              :class="{ active: props.settings.color_id === id }"
-              :title="themeMap[id]?.name || t('settings.themeN', { n: id })"
-              @click="setAccentColor(id)"
-            >
-              <span
-                class="theme-swatch"
-                :style="{ background: themeMap[id]?.gradient }"
-              ></span>
-              <span class="theme-name">{{
-                themeMap[id]?.name || t('settings.themeN', { n: id })
-              }}</span>
-            </button>
-          </div>
-
-          <button
-            type="button"
-            class="reset-button-alt"
-            @click="emit('reset-color')"
-          >
-            <Zap :size="14" /> {{ t('settings.resetAccountColor') }}
-          </button>
+          <span class="save-state">
+            {{ saving ? t('settings.saving') : t('settings.autosaved') }}
+          </span>
         </div>
 
-        <!-- Color del Loader -->
-        <div class="settings-group color-group separate-section">
-          <span class="setting-label">{{ t('settings.loaderTitle') }}</span>
+        <!-- Lista de Acordeones -->
+        <div class="settings-accordion">
+          <!-- 1. Temas y color -->
+          <AppAccordion
+            :title="t('settings.themesTitle')"
+            :description="t('settings.themesSub')"
+            :model-value="openSection === 'themes'"
+            @update:model-value="openSection = $event ? 'themes' : ''"
+          >
+            <template #icon>
+              <Palette :size="15" />
+            </template>
 
-          <span class="color-group-title">{{
-            t('settings.telegramGroup')
-          }}</span>
-          <div class="color-selector-container">
-            <div class="color-row">
-              <button
-                v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
-                :key="'loader-' + id"
-                type="button"
-                class="color-dot"
-                :class="{
-                  active: props.settings.loader_color_id === id
-                }"
-                :style="{
-                  background: themeMap[id]?.gradient || '#38a7ff'
-                }"
-                :title="t('settings.colorLoaderN', { n: id })"
-                @click="setLoaderColor(id)"
-              ></button>
+            <div class="settings-columns">
+              <!-- Paleta de Color de Acento y Tema -->
+              <div class="settings-group color-group">
+                <span class="color-group-title">{{
+                  t('settings.telegramGroup')
+                }}</span>
+                <div class="color-selector-container">
+                  <div class="color-row">
+                    <button
+                      v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
+                      :key="id"
+                      type="button"
+                      class="color-dot"
+                      :class="{ active: props.settings.color_id === id }"
+                      :style="{
+                        background: themeMap[id]?.gradient || '#38a7ff'
+                      }"
+                      :title="t('settings.colorN', { n: id })"
+                      @click="setAccentColor(id)"
+                    ></button>
+                  </div>
+                  <div class="color-row">
+                    <button
+                      v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
+                      :key="id"
+                      type="button"
+                      class="color-dot gradient-dot"
+                      :class="{ active: props.settings.color_id === id }"
+                      :style="{
+                        background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
+                      }"
+                      :title="t('settings.gradientN', { n: id })"
+                      @click="setAccentColor(id)"
+                    ></button>
+                  </div>
+                </div>
+
+                <span class="color-group-title">{{
+                  t('settings.thematicGroup')
+                }}</span>
+                <div class="themes-list">
+                  <button
+                    v-for="id in specialThemes"
+                    :key="'theme-' + id"
+                    type="button"
+                    class="theme-chip"
+                    :class="{ active: props.settings.color_id === id }"
+                    :title="
+                      themeMap[id]?.name || t('settings.themeN', { n: id })
+                    "
+                    @click="setAccentColor(id)"
+                  >
+                    <span
+                      class="theme-swatch"
+                      :style="{ background: themeMap[id]?.gradient }"
+                    ></span>
+                    <span class="theme-name">{{
+                      themeMap[id]?.name || t('settings.themeN', { n: id })
+                    }}</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  class="reset-button-alt"
+                  @click="emit('reset-color')"
+                >
+                  <Zap :size="14" /> {{ t('settings.resetAccountColor') }}
+                </button>
+              </div>
+
+              <!-- Color del Loader -->
+              <div class="settings-group color-group">
+                <span class="setting-label">{{
+                  t('settings.loaderTitle')
+                }}</span>
+
+                <span class="color-group-title">{{
+                  t('settings.telegramGroup')
+                }}</span>
+                <div class="color-selector-container">
+                  <div class="color-row">
+                    <button
+                      v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
+                      :key="'loader-' + id"
+                      type="button"
+                      class="color-dot"
+                      :class="{
+                        active: props.settings.loader_color_id === id
+                      }"
+                      :style="{
+                        background: themeMap[id]?.gradient || '#38a7ff'
+                      }"
+                      :title="t('settings.colorLoaderN', { n: id })"
+                      @click="setLoaderColor(id)"
+                    ></button>
+                  </div>
+                  <div class="color-row">
+                    <button
+                      v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
+                      :key="'loader-grad-' + id"
+                      type="button"
+                      class="color-dot gradient-dot"
+                      :class="{
+                        active: props.settings.loader_color_id === id
+                      }"
+                      :style="{
+                        background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
+                      }"
+                      :title="t('settings.gradientLoaderN', { n: id })"
+                      @click="setLoaderColor(id)"
+                    ></button>
+                  </div>
+                </div>
+
+                <span class="color-group-title">{{
+                  t('settings.thematicGroupShort')
+                }}</span>
+                <div class="color-selector-container">
+                  <div class="color-row">
+                    <button
+                      v-for="id in specialThemes"
+                      :key="'loader-theme-' + id"
+                      type="button"
+                      class="color-dot theme-dot"
+                      :class="{
+                        active: props.settings.loader_color_id === id
+                      }"
+                      :style="{ background: themeMap[id]?.gradient }"
+                      :title="
+                        themeMap[id]?.name || t('settings.themeN', { n: id })
+                      "
+                      @click="setLoaderColor(id)"
+                    ></button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="reset-button-alt"
+                  @click="emit('reset-loader-color')"
+                >
+                  <Zap :size="14" /> {{ t('settings.resetLoaderColor') }}
+                </button>
+              </div>
             </div>
-            <div class="color-row">
-              <button
-                v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
-                :key="'loader-grad-' + id"
-                type="button"
-                class="color-dot gradient-dot"
-                :class="{
-                  active: props.settings.loader_color_id === id
-                }"
-                :style="{
-                  background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
-                }"
-                :title="t('settings.gradientLoaderN', { n: id })"
-                @click="setLoaderColor(id)"
-              ></button>
+          </AppAccordion>
+
+          <!-- 2. Idioma -->
+          <AppAccordion
+            :title="t('settings.langTitle')"
+            :description="t('settings.langSub')"
+            :model-value="openSection === 'language'"
+            @update:model-value="openSection = $event ? 'language' : ''"
+          >
+            <template #icon>
+              <Languages :size="15" />
+            </template>
+
+            <div class="settings-group">
+              <div class="themes-list">
+                <button
+                  type="button"
+                  class="theme-chip language-chip"
+                  :class="{ active: locale === 'es' }"
+                  :aria-pressed="locale === 'es'"
+                  @click="changeLanguage('es')"
+                >
+                  <span class="theme-name">Español</span>
+                </button>
+                <button
+                  type="button"
+                  class="theme-chip language-chip"
+                  :class="{ active: locale === 'en' }"
+                  :aria-pressed="locale === 'en'"
+                  @click="changeLanguage('en')"
+                >
+                  <span class="theme-name">English</span>
+                </button>
+              </div>
+              <small class="lang-note">{{ t('settings.langNote') }}</small>
             </div>
-          </div>
-
-          <span class="color-group-title">{{
-            t('settings.thematicGroupShort')
-          }}</span>
-          <div class="color-selector-container">
-            <div class="color-row">
-              <button
-                v-for="id in specialThemes"
-                :key="'loader-theme-' + id"
-                type="button"
-                class="color-dot theme-dot"
-                :class="{
-                  active: props.settings.loader_color_id === id
-                }"
-                :style="{ background: themeMap[id]?.gradient }"
-                :title="themeMap[id]?.name || t('settings.themeN', { n: id })"
-                @click="setLoaderColor(id)"
-              ></button>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            class="reset-button-alt"
-            @click="emit('reset-loader-color')"
-          >
-            <Zap :size="14" /> {{ t('settings.resetLoaderColor') }}
-          </button>
+          </AppAccordion>
         </div>
-      </div>
-    </div>
-
-    <!-- 2. Idioma -->
-    <div class="panel settings-card">
-      <div class="panel-heading">
-        <div class="eyebrow">
-          <Languages :size="16" />
-          <span>{{ t('settings.langTitle') }}</span>
-        </div>
-        <h2>{{ t('settings.langSub') }}</h2>
-      </div>
-
-      <div class="settings-group">
-        <div class="themes-list">
-          <button
-            type="button"
-            class="theme-chip language-chip"
-            :class="{ active: locale === 'es' }"
-            :aria-pressed="locale === 'es'"
-            @click="changeLanguage('es')"
-          >
-            <span class="theme-name">Español</span>
-          </button>
-          <button
-            type="button"
-            class="theme-chip language-chip"
-            :class="{ active: locale === 'en' }"
-            :aria-pressed="locale === 'en'"
-            @click="changeLanguage('en')"
-          >
-            <span class="theme-name">English</span>
-          </button>
-        </div>
-        <small class="lang-note">{{ t('settings.langNote') }}</small>
-      </div>
+      </aside>
     </div>
   </div>
 </template>
 
 <style scoped>
-.settings-view {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.settings-card {
-  padding: 24px;
-}
-
-.settings-columns {
+.content-grid-single {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-top: 16px;
+  grid-template-columns: 1fr;
+  gap: 18px;
 }
 
-.settings-group {
+.settings-panel-full {
+  padding: 30px;
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--user-primary, #38a7ff);
+  margin-bottom: 4px;
+}
+
+.panel-heading h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f1f7ff;
+  margin: 0;
+}
+
+.save-state {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--user-text-dim, #728ba2);
+  background: var(--user-surface-light, #0e2032);
+  border: 1px solid var(--user-border, #1b344b);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.settings-accordion {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.separate-section {
-  border-top: 1px solid var(--user-border, #1b344b);
-  padding-top: 18px;
 }
 
 .setting-label {
@@ -335,7 +396,7 @@ const changeLanguage = (lang) => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .theme-chip {
@@ -347,7 +408,7 @@ const changeLanguage = (lang) => {
   border: 1px solid var(--user-border, #1b344b);
   background: var(--user-surface-light, #0e2032);
   color: var(--user-text-dim, #728ba2);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -403,5 +464,11 @@ const changeLanguage = (lang) => {
   font-size: 12px;
   color: var(--user-text-dim, #728ba2);
   line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .settings-panel-full {
+    padding: 16px 14px;
+  }
 }
 </style>

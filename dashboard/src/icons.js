@@ -33,5 +33,7 @@ export {
   Globe,
   Languages,
   Zap,
+  ChevronRight,
+  Settings2,
   FileText as ScrollText
 } from 'lucide-vue-next'
