@@ -195,7 +195,18 @@ func (cm *ClientManager) stopRunning() {
 	if cancel != nil {
 		cancel()
 	}
-	cm.runWg.Wait()
+
+	done := make(chan struct{})
+	go func() {
+		cm.runWg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(1 * time.Second):
+		logbus.Warn(logbus.CatTelegram, "Timeout esperando cierre de cliente anterior")
+	}
 
 	cm.mu.Lock()
 	cm.client = nil
@@ -236,6 +247,8 @@ func (cm *ClientManager) GetAuthStatus(ctx context.Context) AuthStatus {
 	client := cm.client
 	apiID := cm.apiID
 	apiHash := cm.apiHash
+	phoneCodeHash := cm.phoneCodeHash
+	pendingPhone := cm.pendingPhone
 	cm.mu.RUnlock()
 
 	if apiID == 0 || apiHash == "" || client == nil {
@@ -248,11 +261,22 @@ func (cm *ClientManager) GetAuthStatus(ctx context.Context) AuthStatus {
 		}
 	}
 
-	timeout := 3 * time.Second
-	if cm.HaySesionGuardada() {
-		timeout = 5 * time.Second
+	if !cm.HaySesionGuardada() {
+		state := "NEED_PHONE"
+		if phoneCodeHash != "" {
+			state = "WAITING_CODE"
+		}
+		return AuthStatus{
+			Configured:     true,
+			HasCredentials: true,
+			Authorized:     false,
+			Authenticated:  false,
+			State:          state,
+			Phone:          pendingPhone,
+		}
 	}
 
+	timeout := 5 * time.Second
 	waitCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	if err := cm.WaitReady(waitCtx); err != nil {

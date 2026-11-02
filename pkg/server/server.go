@@ -23,6 +23,7 @@ type Server struct {
 	clientMgr *telegram.ClientManager
 	storage   *storage.Storage
 	assets    fs.FS
+	mux       *http.ServeMux
 	httpSrv   *http.Server
 	mu        sync.Mutex
 }
@@ -59,6 +60,7 @@ func (s *Server) Start(host string, port int) (string, error) {
 	}
 
 	mux := http.NewServeMux()
+	s.mux = mux
 
 	// API Routes
 	mux.HandleFunc("/api/auth/status", s.handleAuthStatus)
@@ -137,6 +139,15 @@ func (s *Server) Stop() {
 		_ = s.httpSrv.Shutdown(ctx)
 		s.httpSrv = nil
 	}
+}
+
+func (s *Server) Handler() http.Handler {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.mux != nil {
+		return corsMiddleware(s.mux)
+	}
+	return nil
 }
 
 func jsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {

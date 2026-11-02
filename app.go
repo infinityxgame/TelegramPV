@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"path/filepath"
 	"sync"
 
@@ -100,4 +101,11 @@ func (a *App) shutdown(ctx context.Context) {
 
 func (a *App) GetServerURL() string {
 	return a.serverURL
+}
+
+func (a *App) Handler() http.Handler {
+	if a.server != nil {
+		return a.server.Handler()
+	}
+	return nil
 }

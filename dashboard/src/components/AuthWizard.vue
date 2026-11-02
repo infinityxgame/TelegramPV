@@ -83,15 +83,33 @@ const apiCall = async (url, body) => {
   loading.value = true
   errorMessage.value = ''
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders(),
-        'X-TGDL-Request': '1'
-      },
-      body: JSON.stringify(body)
-    })
+    let res
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+          'X-TGDL-Request': '1'
+        },
+        body: JSON.stringify(body)
+      })
+    } catch {
+      const fallbackUrl = `http://127.0.0.1:8766${url}`
+      try {
+        res = await fetch(fallbackUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders(),
+            'X-TGDL-Request': '1'
+          },
+          body: JSON.stringify(body)
+        })
+      } catch {
+        throw new Error(t('auth.errNoResponse'))
+      }
+    }
 
     const text = await res.text()
     if (!text || text.trim() === '') {
@@ -135,11 +153,20 @@ const saveCredentials = async () => {
     return
   }
 
-  const data = await apiCall('/api/auth/credentials', {
-    api_id: trimmedApiId,
-    api_hash: trimmedApiHash
-  })
-  emit('auth-success', data)
+  try {
+    const data = await apiCall('/api/auth/credentials', {
+      api_id: trimmedApiId,
+      api_hash: trimmedApiHash
+    })
+    stepOverride.value = 2
+    emit('auth-success', {
+      has_credentials: true,
+      state: 'NEED_PHONE',
+      ...data
+    })
+  } catch (err) {
+    console.error('saveCredentials error:', err)
+  }
 }
 
 const sendCode = async () => {

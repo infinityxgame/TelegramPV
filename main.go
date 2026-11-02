@@ -81,7 +81,7 @@ func runDesktopMode() {
 	err = wails.Run(&options.App{
 		Title:             "TelegramPV",
 		Width:             1200,
-		Height:            780,
+		Height:            640,
 		MinWidth:          900,
 		MinHeight:         600,
 		DisableResize:     false,
@@ -91,7 +91,8 @@ func runDesktopMode() {
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 18, G: 20, B: 22, A: 255},
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets:  assets,
+			Handler: app.Handler(),
 		},
 		OnStartup:  app.startup,
 		OnShutdown: app.shutdown,
