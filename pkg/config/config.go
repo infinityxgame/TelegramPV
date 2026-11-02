@@ -11,7 +11,7 @@ import (
 
 const (
 	AppVersion = "1.0.0"
-	GithubRepo = "TelegramPV/TelegramPV"
+	GithubRepo = "infinityxgame/TelegramPV"
 
 	DefaultBindHost = "127.0.0.1"
 	DefaultBindPort = 8766
