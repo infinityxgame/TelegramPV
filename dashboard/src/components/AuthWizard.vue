@@ -127,7 +127,6 @@ const apiCall = async (url, body) => {
       throw new Error(data.error || data.detail || t('auth.errProcess'))
     }
 
-    stepOverride.value = null
     return data
   } catch (err) {
     errorMessage.value = err.message
@@ -180,21 +179,27 @@ const sendCode = async () => {
   }
   phoneNumber.value = cleanPhone
 
-  const data = await apiCall('/api/auth/send-code', {
-    phone: cleanPhone,
-    phone_number: cleanPhone
-  })
+  try {
+    const data = await apiCall('/api/auth/send-code', {
+      phone: cleanPhone,
+      phone_number: cleanPhone
+    })
 
-  if (data.phone_code_hash) {
-    phoneCodeHash.value = data.phone_code_hash
+    if (data.phone_code_hash) {
+      phoneCodeHash.value = data.phone_code_hash
+    }
+
+    stepOverride.value = 3
+
+    emit('auth-success', {
+      ...props.authStatus,
+      state: 'WAITING_CODE',
+      phone: cleanPhone,
+      phone_number: cleanPhone
+    })
+  } catch (err) {
+    console.error('sendCode error:', err)
   }
-
-  emit('auth-success', {
-    ...props.authStatus,
-    state: 'WAITING_CODE',
-    phone: cleanPhone,
-    phone_number: cleanPhone
-  })
 }
 
 const verifyCode = async () => {
@@ -202,18 +207,24 @@ const verifyCode = async () => {
     errorMessage.value = t('auth.errCode')
     return
   }
-  const data = await apiCall('/api/auth/sign-in', {
-    phone: phoneNumber.value,
-    phone_number: phoneNumber.value,
-    code: code.value.trim(),
-    phone_code_hash: phoneCodeHash.value
-  })
+  try {
+    const data = await apiCall('/api/auth/sign-in', {
+      phone: phoneNumber.value,
+      phone_number: phoneNumber.value,
+      code: code.value.trim(),
+      phone_code_hash: phoneCodeHash.value
+    })
 
-  code.value = ''
-  if (data.status === '2fa_required' || data.state === 'WAITING_2FA') {
-    emit('auth-success', { ...props.authStatus, state: 'WAITING_2FA' })
-  } else {
-    emit('auth-success', { ...data, authenticated: true })
+    code.value = ''
+    if (data.status === '2fa_required' || data.state === 'WAITING_2FA') {
+      stepOverride.value = 4
+      emit('auth-success', { ...props.authStatus, state: 'WAITING_2FA' })
+    } else {
+      stepOverride.value = 5
+      emit('auth-success', { ...data, authenticated: true })
+    }
+  } catch (err) {
+    console.error('verifyCode error:', err)
   }
 }
 
@@ -230,12 +241,17 @@ const verify2FA = async () => {
     errorMessage.value = t('auth.err2fa')
     return
   }
-  const data = await apiCall('/api/auth/2fa', {
-    password: password.value
-  })
+  try {
+    const data = await apiCall('/api/auth/2fa', {
+      password: password.value
+    })
 
-  password.value = ''
-  emit('auth-success', { ...data, authenticated: true })
+    password.value = ''
+    stepOverride.value = 5
+    emit('auth-success', { ...data, authenticated: true })
+  } catch (err) {
+    console.error('verify2FA error:', err)
+  }
 }
 
 const goBack = async () => {
