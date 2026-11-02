@@ -179,13 +179,24 @@ watch(
   }
 )
 
+const fontReady = ref(false)
+
 onMounted(async () => {
+  try {
+    if (document.fonts && document.fonts.load) {
+      await document.fonts.load('86px LoaderFont')
+    }
+  } catch {
+    /* fallback */
+  }
+  fontReady.value = true
+
   const startBoot = Date.now()
   await checkAuthStatus()
   await loadSettings()
 
   const elapsed = Date.now() - startBoot
-  const minTime = 4200
+  const minTime = 6500
   const remaining = Math.max(0, minTime - elapsed)
   setTimeout(() => {
     bootstrapping.value = false
@@ -205,6 +216,7 @@ onMounted(async () => {
             text-anchor="middle"
             dominant-baseline="middle"
             class="hello-text"
+            :class="{ 'font-ready': fontReady }"
           >
             <tspan class="c1">T</tspan>
             <tspan class="c2">e</tspan>
@@ -420,7 +432,7 @@ onMounted(async () => {
   filter: drop-shadow(0 0 25px var(--loader-glow, rgba(56, 167, 255, 0.4)));
 }
 
-.hello-text tspan:not(.dots):not(.dot1):not(.dot2):not(.dot3) {
+.hello-text.font-ready tspan:not(.dots):not(.dot1):not(.dot2):not(.dot3) {
   fill: var(--loader-primary, #38a7ff);
   fill-opacity: 0;
   stroke: var(--loader-primary, #38a7ff);
@@ -434,31 +446,31 @@ onMounted(async () => {
   animation-delay: 0.1s;
 }
 .c2 {
-  animation-delay: 0.4s;
+  animation-delay: 0.5s;
 }
 .c3 {
-  animation-delay: 0.7s;
+  animation-delay: 0.9s;
 }
 .c4 {
-  animation-delay: 1s;
-}
-.c5 {
   animation-delay: 1.3s;
 }
+.c5 {
+  animation-delay: 1.7s;
+}
 .c6 {
-  animation-delay: 1.6s;
+  animation-delay: 2.1s;
 }
 .c7 {
-  animation-delay: 1.9s;
-}
-.c8 {
-  animation-delay: 2.2s;
-}
-.c9 {
   animation-delay: 2.5s;
 }
+.c8 {
+  animation-delay: 2.9s;
+}
+.c9 {
+  animation-delay: 3.3s;
+}
 .c10 {
-  animation-delay: 2.8s;
+  animation-delay: 3.7s;
 }
 
 .dots {
@@ -479,13 +491,13 @@ onMounted(async () => {
 }
 
 .dot1 {
-  animation-delay: 3.2s;
+  animation-delay: 4.2s;
 }
 .dot2 {
-  animation-delay: 3.4s;
+  animation-delay: 4.4s;
 }
 .dot3 {
-  animation-delay: 3.6s;
+  animation-delay: 4.6s;
 }
 
 @keyframes dotFade {

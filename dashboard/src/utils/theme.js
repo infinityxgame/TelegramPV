@@ -438,7 +438,11 @@ export const applyLoaderTheme = (colorId) => {
   const root = document.documentElement
   root.style.setProperty('--loader-primary', theme.primary)
   root.style.setProperty('--loader-glow', theme.glow)
-  localStorage.setItem('tgdl_loader_color', colorId)
+  try {
+    localStorage.setItem('tgdl_loader_color', String(colorId))
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 export const applyTheme = (colorId) => {
@@ -458,22 +462,16 @@ export const applyTheme = (colorId) => {
   root.style.setProperty('--user-gradient', theme.gradient)
   applyThemeClass(themeMap[colorId] ? colorId : 5)
 
-  // Persistir el color en el objeto de usuario para que index.html lo use en el arranque
   try {
-    const user = JSON.parse(localStorage.getItem('tgdl_user') || 'null')
-    if (user) {
-      user.color_id = colorId
-      localStorage.setItem('tgdl_user', JSON.stringify(user))
-    }
+    localStorage.setItem('telegrampv_color_id', String(colorId))
+    const user = JSON.parse(localStorage.getItem('tgdl_user') || 'null') || {}
+    user.color_id = colorId
+    localStorage.setItem('tgdl_user', JSON.stringify(user))
   } catch (e) {
     console.error(e)
   }
 }
 
-// En un dispositivo nuevo no hay nada guardado, así que la pantalla de acceso
-// remoto saldría con el azul por defecto. El color del panel se puede consultar
-// sin token (es solo un número, no dice nada de la cuenta), así que lo pedimos
-// para que el login ya se vea con el color que el usuario tiene configurado.
 export const loadPublicTheme = async () => {
   try {
     const response = await fetch('/api/theme')
@@ -491,28 +489,38 @@ export const loadPublicTheme = async () => {
   }
 }
 
-// Aplica el tema guardado en localStorage. Antes corría como efecto lateral en
-// la importación de App.vue; ahora es explícito para que importar el módulo
-// no pinte el DOM y sea comprobable.
 export const initTheme = () => {
-  const storedUser = JSON.parse(localStorage.getItem('tgdl_user') || 'null')
-  const storedLoaderColor = localStorage.getItem('tgdl_loader_color')
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('tgdl_user') || 'null')
+    const storedColor = localStorage.getItem('telegrampv_color_id')
+    const storedLoaderColor = localStorage.getItem('tgdl_loader_color')
 
-  if (storedUser && storedUser.color_id !== undefined) {
-    applyTheme(storedUser.color_id)
-    if (storedLoaderColor !== null) {
-      applyLoaderTheme(parseInt(storedLoaderColor))
-    } else {
-      applyLoaderTheme(
-        storedUser.loader_color_id !== undefined
-          ? storedUser.loader_color_id
-          : storedUser.color_id
-      )
+    let colorId = 5
+    if (
+      storedUser &&
+      storedUser.color_id !== undefined &&
+      storedUser.color_id !== null
+    ) {
+      colorId = parseInt(storedUser.color_id)
+    } else if (storedColor !== null && storedColor !== undefined) {
+      colorId = parseInt(storedColor)
     }
-  } else {
+
+    let loaderColorId = colorId
+    if (storedLoaderColor !== null && storedLoaderColor !== undefined) {
+      loaderColorId = parseInt(storedLoaderColor)
+    } else if (
+      storedUser &&
+      storedUser.loader_color_id !== undefined &&
+      storedUser.loader_color_id !== null
+    ) {
+      loaderColorId = parseInt(storedUser.loader_color_id)
+    }
+
+    applyTheme(colorId)
+    applyLoaderTheme(loaderColorId)
+  } catch {
     applyTheme(5)
-    applyLoaderTheme(
-      storedLoaderColor !== null ? parseInt(storedLoaderColor) : 5
-    )
+    applyLoaderTheme(5)
   }
 }
