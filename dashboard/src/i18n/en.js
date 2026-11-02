@@ -115,15 +115,23 @@ export default {
   settings: {
     title: 'Application Settings',
     appearance: 'Theme & Appearance',
-    themeSelect: 'Select Theme',
-    language: 'Language',
-    languageSelect: 'Select Language',
-    session: 'Telegram Session',
-    connectedAs: 'Connected as',
-    phone: 'Phone',
-    logout: 'Log Out Session',
-    logoutConfirm:
-      'Are you sure you want to log out? You will need to re-authenticate.',
+    themesTitle: 'Themes & Appearance',
+    accentTitle: 'Accent Color & Theme',
+    telegramGroup: 'Telegram',
+    thematicGroup: 'Thematic Colors',
+    thematicGroupShort: 'Thematic',
+    colorN: 'Color {n}',
+    gradientN: 'Gradient {n}',
+    themeN: 'Theme {n}',
+    resetAccountColor: 'Reset account color',
+    loaderTitle: 'Loader Color',
+    colorLoaderN: 'Loader Color {n}',
+    gradientLoaderN: 'Loader Gradient {n}',
+    resetLoaderColor: 'Reset loader color',
+    langTitle: 'Interface Language',
+    langSub: 'Select dashboard language',
+    langNote:
+      'Your language choice will be automatically saved in your account preferences.',
     saveSuccess: 'Settings saved successfully'
   },
   logs: {

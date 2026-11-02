@@ -51,11 +51,7 @@ const syncChats = async () => {
       headers: authHeaders()
     })
     if (res.ok) {
-      const data = await res.json()
-      chats.value = data.chats || []
-      if (data.counts) {
-        counts.value = data.counts
-      }
+      await fetchChats()
     }
   } catch (err) {
     console.error('Failed to sync chats:', err)

@@ -1,137 +1,238 @@
 <script setup>
-import { useConfirmModal } from '../composables/useConfirmModal'
+import { computed } from 'vue'
 import { useI18n } from '../i18n'
-import { Check, Languages, LogOut, Palette, Settings } from '../icons'
-import { applyTheme, themeMap } from '../utils/theme.js'
+import { Languages, Palette, Zap } from '../icons'
+import { applyLoaderTheme, applyTheme, themeMap } from '../utils/theme.js'
 
-defineProps({
+const props = defineProps({
   settings: {
     type: Object,
     required: true
-  },
-  authStatus: {
-    type: Object,
-    default: () => ({})
   }
 })
 
-const emit = defineEmits(['update:settings', 'logout'])
+const emit = defineEmits([
+  'update:settings',
+  'reset-color',
+  'reset-loader-color'
+])
+
 const { t, locale, setLocale } = useI18n()
-const { confirm } = useConfirmModal()
 
 const patch = (partial) => {
   emit('update:settings', partial)
 }
 
-const selectTheme = (colorId) => {
-  patch({ color_id: colorId, loader_color_id: colorId })
-  applyTheme(colorId)
+const specialThemes = computed(() =>
+  Object.keys(themeMap)
+    .map(Number)
+    .filter((id) => id >= 16)
+    .sort((a, b) => a - b)
+)
+
+const setAccentColor = (id) => {
+  patch({ color_id: id })
+  applyTheme(id)
+}
+
+const setLoaderColor = (id) => {
+  patch({ loader_color_id: id })
+  applyLoaderTheme(id)
 }
 
 const changeLanguage = (lang) => {
   patch({ language: lang })
   setLocale(lang)
 }
-
-const handleLogout = async () => {
-  const confirmed = await confirm({
-    title: t('settings.logout'),
-    message: t('settings.logoutConfirm'),
-    confirmText: t('settings.logout'),
-    cancelText: t('common.cancel')
-  })
-
-  if (confirmed) {
-    emit('logout')
-  }
-}
 </script>
 
 <template>
   <div class="settings-view">
-    <!-- Theme & Appearance -->
+    <!-- 1. Temas y Colores -->
     <div class="panel settings-card">
       <div class="panel-heading">
         <div class="eyebrow">
           <Palette :size="16" />
-          <span>{{ t('settings.appearance') }}</span>
+          <span>{{ t('settings.themesTitle') }}</span>
         </div>
-        <h2>{{ t('settings.themeSelect') }}</h2>
+        <h2>{{ t('settings.accentTitle') }}</h2>
       </div>
 
-      <div class="theme-grid">
-        <button
-          v-for="(palette, idStr) in themeMap"
-          :key="idStr"
-          class="theme-swatch"
-          :class="{ selected: settings.color_id === Number(idStr) }"
-          :style="{ background: palette.gradient || palette.primary }"
-          @click="selectTheme(Number(idStr))"
-        >
-          <Check
-            v-if="settings.color_id === Number(idStr)"
-            :size="16"
-            class="swatch-check"
-          />
-        </button>
+      <div class="settings-columns">
+        <!-- Paleta de Color de Acento y Tema -->
+        <div class="settings-group color-group">
+          <span class="color-group-title">{{
+            t('settings.telegramGroup')
+          }}</span>
+          <div class="color-selector-container">
+            <div class="color-row">
+              <button
+                v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
+                :key="id"
+                type="button"
+                class="color-dot"
+                :class="{ active: props.settings.color_id === id }"
+                :style="{
+                  background: themeMap[id]?.gradient || '#38a7ff'
+                }"
+                :title="t('settings.colorN', { n: id })"
+                @click="setAccentColor(id)"
+              ></button>
+            </div>
+            <div class="color-row">
+              <button
+                v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
+                :key="id"
+                type="button"
+                class="color-dot gradient-dot"
+                :class="{ active: props.settings.color_id === id }"
+                :style="{
+                  background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
+                }"
+                :title="t('settings.gradientN', { n: id })"
+                @click="setAccentColor(id)"
+              ></button>
+            </div>
+          </div>
+
+          <span class="color-group-title">{{
+            t('settings.thematicGroup')
+          }}</span>
+          <div class="themes-list">
+            <button
+              v-for="id in specialThemes"
+              :key="'theme-' + id"
+              type="button"
+              class="theme-chip"
+              :class="{ active: props.settings.color_id === id }"
+              :title="themeMap[id]?.name || t('settings.themeN', { n: id })"
+              @click="setAccentColor(id)"
+            >
+              <span
+                class="theme-swatch"
+                :style="{ background: themeMap[id]?.gradient }"
+              ></span>
+              <span class="theme-name">{{
+                themeMap[id]?.name || t('settings.themeN', { n: id })
+              }}</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="reset-button-alt"
+            @click="emit('reset-color')"
+          >
+            <Zap :size="14" /> {{ t('settings.resetAccountColor') }}
+          </button>
+        </div>
+
+        <!-- Color del Loader -->
+        <div class="settings-group color-group separate-section">
+          <span class="setting-label">{{ t('settings.loaderTitle') }}</span>
+
+          <span class="color-group-title">{{
+            t('settings.telegramGroup')
+          }}</span>
+          <div class="color-selector-container">
+            <div class="color-row">
+              <button
+                v-for="id in [0, 1, 2, 3, 4, 5, 6, 7]"
+                :key="'loader-' + id"
+                type="button"
+                class="color-dot"
+                :class="{
+                  active: props.settings.loader_color_id === id
+                }"
+                :style="{
+                  background: themeMap[id]?.gradient || '#38a7ff'
+                }"
+                :title="t('settings.colorLoaderN', { n: id })"
+                @click="setLoaderColor(id)"
+              ></button>
+            </div>
+            <div class="color-row">
+              <button
+                v-for="id in [8, 9, 10, 11, 12, 13, 14, 15]"
+                :key="'loader-grad-' + id"
+                type="button"
+                class="color-dot gradient-dot"
+                :class="{
+                  active: props.settings.loader_color_id === id
+                }"
+                :style="{
+                  background: `linear-gradient(135deg, ${themeMap[id]?.primary || '#38a7ff'} 49.8%, ${themeMap[id]?.secondary || '#b48bf2'} 50.2%)`
+                }"
+                :title="t('settings.gradientLoaderN', { n: id })"
+                @click="setLoaderColor(id)"
+              ></button>
+            </div>
+          </div>
+
+          <span class="color-group-title">{{
+            t('settings.thematicGroupShort')
+          }}</span>
+          <div class="color-selector-container">
+            <div class="color-row">
+              <button
+                v-for="id in specialThemes"
+                :key="'loader-theme-' + id"
+                type="button"
+                class="color-dot theme-dot"
+                :class="{
+                  active: props.settings.loader_color_id === id
+                }"
+                :style="{ background: themeMap[id]?.gradient }"
+                :title="themeMap[id]?.name || t('settings.themeN', { n: id })"
+                @click="setLoaderColor(id)"
+              ></button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="reset-button-alt"
+            @click="emit('reset-loader-color')"
+          >
+            <Zap :size="14" /> {{ t('settings.resetLoaderColor') }}
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Language Settings -->
+    <!-- 2. Idioma -->
     <div class="panel settings-card">
       <div class="panel-heading">
         <div class="eyebrow">
           <Languages :size="16" />
-          <span>{{ t('settings.language') }}</span>
+          <span>{{ t('settings.langTitle') }}</span>
         </div>
-        <h2>{{ t('settings.languageSelect') }}</h2>
+        <h2>{{ t('settings.langSub') }}</h2>
       </div>
 
-      <div class="language-options">
-        <button
-          class="lang-btn"
-          :class="{ selected: locale === 'es' }"
-          @click="changeLanguage('es')"
-        >
-          Español (ES)
-        </button>
-        <button
-          class="lang-btn"
-          :class="{ selected: locale === 'en' }"
-          @click="changeLanguage('en')"
-        >
-          English (EN)
-        </button>
-      </div>
-    </div>
-
-    <!-- Session Settings -->
-    <div class="panel settings-card">
-      <div class="panel-heading">
-        <div class="eyebrow">
-          <Settings :size="16" />
-          <span>{{ t('settings.session') }}</span>
+      <div class="settings-group">
+        <div class="themes-list">
+          <button
+            type="button"
+            class="theme-chip language-chip"
+            :class="{ active: locale === 'es' }"
+            :aria-pressed="locale === 'es'"
+            @click="changeLanguage('es')"
+          >
+            <span class="theme-name">Español</span>
+          </button>
+          <button
+            type="button"
+            class="theme-chip language-chip"
+            :class="{ active: locale === 'en' }"
+            :aria-pressed="locale === 'en'"
+            @click="changeLanguage('en')"
+          >
+            <span class="theme-name">English</span>
+          </button>
         </div>
-        <h2>{{ t('settings.session') }}</h2>
+        <small class="lang-note">{{ t('settings.langNote') }}</small>
       </div>
-
-      <div v-if="authStatus.user" class="session-info">
-        <p>
-          <strong>{{ t('settings.connectedAs') }}:</strong>
-          {{ authStatus.user.first_name }} {{ authStatus.user.last_name }} (@{{
-            authStatus.user.username
-          }})
-        </p>
-        <p v-if="authStatus.user.phone">
-          <strong>{{ t('settings.phone') }}:</strong>
-          {{ authStatus.user.phone }}
-        </p>
-      </div>
-
-      <button class="btn-logout" @click="handleLogout">
-        <LogOut :size="16" />
-        <span>{{ t('settings.logout') }}</span>
-      </button>
     </div>
   </div>
 </template>
@@ -147,100 +248,160 @@ const handleLogout = async () => {
   padding: 24px;
 }
 
-.theme-grid {
+.settings-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
   margin-top: 16px;
 }
 
-.theme-swatch {
-  height: 44px;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.theme-swatch:hover {
-  transform: scale(1.08);
-}
-
-.theme-swatch.selected {
-  border-color: #fff;
-  box-shadow: 0 0 14px var(--user-glow);
-}
-
-.swatch-check {
-  color: #fff;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
-}
-
-.language-options {
+.settings-group {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-top: 16px;
 }
 
-.lang-btn {
-  padding: 12px 20px;
-  border-radius: 10px;
-  background: var(--user-surface-light, #0e2032);
-  border: 1px solid var(--user-border-light, #234765);
-  color: #dbe7f5;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.separate-section {
+  border-top: 1px solid var(--user-border, #1b344b);
+  padding-top: 18px;
 }
 
-.lang-btn:hover {
-  background: var(--user-border, #1b344b);
-}
-
-.lang-btn.selected {
-  background: var(--user-primary, #38a7ff);
-  color: var(--user-bg-base, #07111f);
-  border-color: transparent;
-}
-
-.session-info {
-  background: var(--user-bg-base, #07111f);
-  border: 1px solid var(--user-border, #1b344b);
-  padding: 14px 18px;
-  border-radius: 10px;
-  margin: 16px 0;
+.setting-label {
   font-size: 13px;
+  font-weight: 700;
+  color: #f1f7ff;
+}
+
+.color-group-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--user-text-dim, #728ba2);
+  margin-top: 4px;
 }
 
-.session-info p {
-  margin: 4px 0;
+.color-selector-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.session-info strong {
-  color: #dbe7f5;
+.color-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.btn-logout {
+.color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.color-dot:hover {
+  transform: scale(1.15);
+}
+
+.color-dot.active {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 3px var(--user-bg-base, #07111f),
+    0 0 0 5px var(--user-primary, #38a7ff),
+    0 0 15px var(--user-glow);
+  z-index: 2;
+}
+
+.theme-dot {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.theme-dot.active {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 0 3px var(--user-bg-base, #07111f),
+    0 0 0 5px var(--user-primary, #38a7ff),
+    0 0 15px var(--user-glow);
+}
+
+.themes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.theme-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  background: #3d171d;
-  border: 1px solid #732a36;
-  color: #ffadad;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--user-border, #1b344b);
+  background: var(--user-surface-light, #0e2032);
+  color: var(--user-text-dim, #728ba2);
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.btn-logout:hover {
-  background: #48252c;
-  color: #ffb0b0;
+.theme-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--user-primary, #38a7ff);
+  color: #eef7ff;
+}
+
+.theme-chip.active {
+  color: #eef7ff;
+  border-color: var(--user-primary, #38a7ff);
+  background: var(--user-surface, #0b1a2a);
+  box-shadow:
+    0 0 0 1px var(--user-primary, #38a7ff),
+    0 6px 18px var(--user-glow);
+}
+
+.theme-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.reset-button-alt {
+  background: var(--user-surface-light, #0e2032);
+  border: 1px solid var(--user-border, #1b344b);
+  color: var(--user-text-dim, #728ba2);
+  padding: 9px 15px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  transition: all 0.2s;
+  margin-top: 6px;
+}
+
+.reset-button-alt:hover {
+  background: var(--user-icon-bg, #11385b);
+  color: var(--user-accent, #5ebcff);
+  border-color: var(--user-primary, #38a7ff);
+}
+
+.lang-note {
+  font-size: 12px;
+  color: var(--user-text-dim, #728ba2);
+  line-height: 1.4;
 }
 </style>

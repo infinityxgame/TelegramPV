@@ -14,7 +14,7 @@ function getNestedValue(obj, path) {
     )
 }
 
-export function t(key, params, ...args) {
+export function t(key, ...args) {
   const localeDict = messages[currentLocale.value] || messages.es
   let str = getNestedValue(localeDict, key)
   if (str === undefined) {
@@ -26,7 +26,13 @@ export function t(key, params, ...args) {
 
   if (typeof str !== 'string') return str
 
-  if (params && typeof params === 'object' && !Array.isArray(params)) {
+  if (
+    args.length > 0 &&
+    typeof args[0] === 'object' &&
+    args[0] !== null &&
+    !Array.isArray(args[0])
+  ) {
+    const params = args[0]
     str = str.replace(/\{(\w+)\}/g, (match, name) =>
       params[name] !== undefined && params[name] !== null
         ? String(params[name])
@@ -36,7 +42,9 @@ export function t(key, params, ...args) {
 
   if (args.length > 0) {
     args.forEach((arg, i) => {
-      str = str.replace(new RegExp(`%${i + 1}|%s|%d`, 'g'), arg)
+      if (typeof arg !== 'object' || arg === null) {
+        str = str.replace(new RegExp(`%${i + 1}|%s|%d`, 'g'), arg)
+      }
     })
   }
   return str

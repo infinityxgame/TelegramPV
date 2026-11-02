@@ -115,15 +115,23 @@ export default {
   settings: {
     title: 'Ajustes de la Aplicación',
     appearance: 'Tema y Apariencia',
-    themeSelect: 'Seleccionar Tema',
-    language: 'Idioma',
-    languageSelect: 'Seleccionar Idioma',
-    session: 'Sesión de Telegram',
-    connectedAs: 'Conectado como',
-    phone: 'Teléfono',
-    logout: 'Cerrar Sesión',
-    logoutConfirm:
-      '¿Estás seguro de que deseas cerrar sesión? Tendrás que volver a autenticarte.',
+    themesTitle: 'Temas y Apariencia',
+    accentTitle: 'Color de Acento y Tema',
+    telegramGroup: 'Telegram',
+    thematicGroup: 'Colores Temáticos',
+    thematicGroupShort: 'Temáticos',
+    colorN: 'Color {n}',
+    gradientN: 'Degradado {n}',
+    themeN: 'Tema {n}',
+    resetAccountColor: 'Restablecer color de la cuenta',
+    loaderTitle: 'Color del Cargador (Loader)',
+    colorLoaderN: 'Color Loader {n}',
+    gradientLoaderN: 'Degradado Loader {n}',
+    resetLoaderColor: 'Restablecer color del cargador',
+    langTitle: 'Idioma de la Interfaz',
+    langSub: 'Selecciona el idioma del panel',
+    langNote:
+      'Tu elección de idioma se guardará automáticamente en las preferencias de tu cuenta.',
     saveSuccess: 'Ajustes guardados correctamente'
   },
   logs: {

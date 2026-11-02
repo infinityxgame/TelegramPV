@@ -16,7 +16,7 @@ import {
   Users,
   X
 } from './icons'
-import { applyTheme, initTheme } from './utils/theme.js'
+import { applyLoaderTheme, applyTheme, initTheme } from './utils/theme.js'
 import ChatsView from './views/ChatsView.vue'
 import LogsView from './views/LogsView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -138,6 +138,26 @@ const handleLogout = async () => {
   }
 }
 
+const resetColor = () => {
+  if (
+    authStatus.value.user &&
+    authStatus.value.user.color_id !== undefined &&
+    authStatus.value.user.color_id !== null
+  ) {
+    settings.color_id = authStatus.value.user.color_id
+  } else {
+    settings.color_id = 5
+  }
+  applyTheme(settings.color_id)
+  saveSettings()
+}
+
+const resetLoaderColor = () => {
+  settings.loader_color_id = settings.color_id
+  applyLoaderTheme(settings.loader_color_id)
+  saveSettings()
+}
+
 watch(
   () => settings.color_id,
   (newVal) => {
@@ -232,19 +252,19 @@ onMounted(async () => {
         </button>
 
         <button
-          :class="{ selected: activeView === 'settings' }"
-          @click="selectNav('settings')"
-        >
-          <Settings :size="18" />
-          <span>{{ t('nav.settings') }}</span>
-        </button>
-
-        <button
           :class="{ selected: activeView === 'logs' }"
           @click="selectNav('logs')"
         >
           <ScrollText :size="18" />
           <span>{{ t('nav.logs') }}</span>
+        </button>
+
+        <button
+          :class="{ selected: activeView === 'settings' }"
+          @click="selectNav('settings')"
+        >
+          <Settings :size="18" />
+          <span>{{ t('nav.settings') }}</span>
         </button>
       </nav>
 
@@ -298,9 +318,9 @@ onMounted(async () => {
       <SettingsView
         v-else-if="activeView === 'settings'"
         :settings="settings"
-        :auth-status="authStatus"
         @update:settings="updateSettings"
-        @logout="handleLogout"
+        @reset-color="resetColor"
+        @reset-loader-color="resetLoaderColor"
       />
 
       <LogsView v-else-if="activeView === 'logs'" />

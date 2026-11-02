@@ -32,5 +32,6 @@ export {
   Palette,
   Globe,
   Languages,
+  Zap,
   FileText as ScrollText
 } from 'lucide-vue-next'
