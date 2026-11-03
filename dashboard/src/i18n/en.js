@@ -26,7 +26,7 @@ export default {
     currentVersion: 'Current version: {version}',
     availableTitle: 'New version available',
     availableText:
-      'An update is ready ({version}). Updating is recommended to get the improvements.',
+      'An update is ready ({version}). Updating is recommended to get the improvements.\n\nIMPORTANT: There must be no active downloads during the process to avoid corruption. If you have tasks in progress, postpone the update and it will be applied automatically the next time you start the application.',
     postpone: 'Postpone',
     installError: 'Failed to start the update: {message}',
     progressError: 'Error: {status}'
@@ -93,7 +93,7 @@ export default {
       'Enter the 5-digit verification code sent to your Telegram account',
     step4Title: 'Two-Factor Authentication (2FA)',
     step4Desc: 'Enter your 2FA password to unlock your account',
-    passwordLabel: '2FA Password',
+    passwordLabel: 'Continue',
     submit: 'Continue',
     back: 'Back',
     verifyCode: 'Verify Code',

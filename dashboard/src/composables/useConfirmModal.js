@@ -1,49 +1,39 @@
 import { reactive } from 'vue'
-
-const state = reactive({
-  isOpen: false,
-  title: '',
-  message: '',
-  confirmText: '',
-  cancelText: '',
-  onConfirm: null,
-  onCancel: null
-})
+import { t } from '../i18n'
 
 export function useConfirmModal() {
-  const openConfirm = (options) => {
-    return new Promise((resolve) => {
-      state.title = options.title || 'Confirm'
-      state.message = options.message || 'Are you sure?'
-      state.confirmText = options.confirmText || 'Confirm'
-      state.cancelText = options.cancelText || 'Cancel'
+  const modal = reactive({
+    show: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    cancelText: '',
+    type: 'primary',
+    action: null,
+    cancelAction: null
+  })
 
-      state.onConfirm = () => {
-        state.isOpen = false
-        if (options.action) options.action()
-        resolve(true)
-      }
-
-      state.onCancel = () => {
-        state.isOpen = false
-        if (options.cancelAction) options.cancelAction()
-        resolve(false)
-      }
-
-      state.isOpen = true
-    })
+  const openConfirm = (config) => {
+    modal.title = config.title
+    modal.message = config.message
+    modal.confirmText = config.confirmText
+    modal.cancelText =
+      config.cancelText !== undefined ? config.cancelText : t('common.cancel')
+    modal.type = config.type || 'primary'
+    modal.action = config.action
+    modal.cancelAction = config.cancelAction
+    modal.show = true
   }
 
-  const confirm = openConfirm
-
-  const close = () => {
-    state.isOpen = false
+  const handleConfirm = () => {
+    if (modal.action) modal.action()
+    modal.show = false
   }
 
-  return {
-    state,
-    confirm,
-    openConfirm,
-    close
+  const handleCancel = () => {
+    if (modal.cancelAction) modal.cancelAction()
+    modal.show = false
   }
+
+  return { modal, openConfirm, handleConfirm, handleCancel }
 }

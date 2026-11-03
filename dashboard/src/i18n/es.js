@@ -26,7 +26,7 @@ export default {
     currentVersion: 'Versión actual: {version}',
     availableTitle: 'Nueva versión disponible',
     availableText:
-      'Hay una actualización lista ({version}). Se recomienda actualizar para obtener las mejoras.',
+      'Hay una actualización lista ({version}). Se recomienda actualizar para obtener las mejoras.\n\nIMPORTANTE: No debe haber descargas activas durante el proceso para evitar que se corrompan. Si tienes tareas en curso, pospón la actualización y se aplicará automáticamente la próxima vez que inicies la aplicación.',
     postpone: 'Posponer',
     installError: 'Error al iniciar la actualización: {message}',
     progressError: 'Error: {status}'

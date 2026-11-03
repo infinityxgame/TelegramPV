@@ -15,6 +15,7 @@ export {
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
+  HelpCircle,
   ArrowRight,
   ArrowLeft,
   Loader2,

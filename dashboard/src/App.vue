@@ -27,7 +27,7 @@ import SettingsView from './views/SettingsView.vue'
 
 const { authHeaders } = useAuthToken()
 const { t, setLocale } = useI18n()
-const { openConfirm } = useConfirmModal()
+const { modal, openConfirm, handleConfirm, handleCancel } = useConfirmModal()
 
 initTheme()
 
@@ -52,7 +52,6 @@ const api = async (url, options = {}) => {
 }
 
 const showMessage = (msg) => {
-  /* helper en caso de avisos */
   console.log(msg)
 }
 
@@ -236,13 +235,14 @@ onMounted(async () => {
   }
   fontReady.value = true
 
-  // Inicio de comprobación de actualizaciones de fondo
+  // Inicio de comprobación de actualizaciones
   setTimeout(() => checkForUpdates(false), 1000)
   updateCheckTimer = setInterval(() => checkForUpdates(false), 5 * 60 * 1000)
 
   const startBoot = Date.now()
   await checkAuthStatus()
   await loadSettings()
+  await checkForUpdates(true)
 
   const elapsed = Date.now() - startBoot
   const minTime = 6500
@@ -500,7 +500,16 @@ onUnmounted(() => {
       </main>
 
       <!-- Global Confirm Modal -->
-      <ConfirmModal />
+      <ConfirmModal
+        :show="modal.show"
+        :title="modal.title"
+        :message="modal.message"
+        :confirm-text="modal.confirmText"
+        :cancel-text="modal.cancelText"
+        :type="modal.type"
+        @confirm="handleConfirm"
+        @cancel="handleCancel"
+      />
     </div>
   </template>
 </template>
