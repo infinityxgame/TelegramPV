@@ -11,27 +11,32 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"telegrampv/pkg/config"
 	"telegrampv/pkg/i18n"
 	"telegrampv/pkg/logbus"
 	"telegrampv/pkg/storage"
 	"telegrampv/pkg/telegram"
+	"telegrampv/pkg/updater"
 )
 
 type Server struct {
 	clientMgr *telegram.ClientManager
 	storage   *storage.Storage
+	updater   *updater.AppUpdater
 	assets    fs.FS
 	mux       *http.ServeMux
 	httpSrv   *http.Server
+	latestRel *updater.ReleaseInfo
 	mu        sync.Mutex
 }
 
-func NewServer(cm *telegram.ClientManager, st *storage.Storage, assets fs.FS) *Server {
+func NewServer(cm *telegram.ClientManager, st *storage.Storage, up *updater.AppUpdater, assets fs.FS) *Server {
 	return &Server{
 		clientMgr: cm,
 		storage:   st,
+		updater:   up,
 		assets:    assets,
 	}
 }
@@ -81,6 +86,15 @@ func (s *Server) Start(host string, port int) (string, error) {
 	mux.HandleFunc("/api/settings", s.handleSettings)
 	mux.HandleFunc("/api/logs", s.handleLogs)
 
+	// Updates (singular /update/ y plural /updates/)
+	mux.HandleFunc("/api/update/check", s.handleCheckUpdate)
+	mux.HandleFunc("/api/updates/check", s.handleCheckUpdate)
+	mux.HandleFunc("/api/update/progress", s.handleUpdateProgress)
+	mux.HandleFunc("/api/updates/progress", s.handleUpdateProgress)
+	mux.HandleFunc("/api/update/install", s.handleInstallUpdate)
+	mux.HandleFunc("/api/updates/install", s.handleInstallUpdate)
+	mux.HandleFunc("/api/update/postpone", s.handlePostponeUpdate)
+
 	// Static Files Handler
 	if s.assets != nil {
 		fileServer := http.FileServer(http.FS(s.assets))
@@ -90,7 +104,6 @@ func (s *Server) Start(host string, port int) (string, error) {
 				return
 			}
 
-			// Probar si el archivo existe en el FS embebido
 			path := strings.TrimPrefix(r.URL.Path, "/")
 			if path == "" {
 				path = "index.html"
@@ -98,7 +111,6 @@ func (s *Server) Start(host string, port int) (string, error) {
 
 			_, err := s.assets.Open(path)
 			if err != nil {
-				// Fallback a index.html para SPA de Vue
 				r.URL.Path = "/"
 			}
 			fileServer.ServeHTTP(w, r)
@@ -124,6 +136,19 @@ func (s *Server) Start(host string, port int) (string, error) {
 			log.Printf("[SERVER] Server error: %v", err)
 		}
 	}()
+
+	// Comprobación de actualización al iniciar
+	if s.updater != nil {
+		go func() {
+			time.Sleep(1 * time.Second)
+			rel, _, err := s.updater.CheckForUpdate()
+			if err == nil && rel != nil {
+				s.mu.Lock()
+				s.latestRel = rel
+				s.mu.Unlock()
+			}
+		}()
+	}
 
 	logbus.Info(logbus.CatSystem, fmt.Sprintf("Server listening on %s", actualAddr))
 	return actualAddr, nil
@@ -499,4 +524,99 @@ func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 		"logs":    entries,
 		"last_id": lastID,
 	})
+}
+
+// Handlers del actualizador
+func (s *Server) handleCheckUpdate(w http.ResponseWriter, r *http.Request) {
+	if s.updater == nil {
+		jsonError(w, http.StatusInternalServerError, "Updater service not available")
+		return
+	}
+
+	rel, asset, err := s.updater.CheckForUpdate()
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if rel != nil && asset != nil {
+		s.mu.Lock()
+		s.latestRel = rel
+		s.mu.Unlock()
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"update_available": true,
+			"latest":           rel.TagName,
+			"version":          rel.TagName,
+			"current":          config.AppVersion,
+			"size_bytes":       asset.Size,
+			"changelog":        rel.Body,
+		})
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]interface{}{
+		"update_available": false,
+		"latest":           nil,
+		"current":          config.AppVersion,
+		"size_bytes":       0,
+	})
+}
+
+func (s *Server) handleUpdateProgress(w http.ResponseWriter, r *http.Request) {
+	if s.updater == nil {
+		jsonError(w, http.StatusInternalServerError, "Updater service not available")
+		return
+	}
+	jsonResponse(w, http.StatusOK, s.updater.GetProgress())
+}
+
+func (s *Server) handleInstallUpdate(w http.ResponseWriter, r *http.Request) {
+	if s.updater == nil {
+		jsonError(w, http.StatusInternalServerError, "Updater service not available")
+		return
+	}
+
+	s.mu.Lock()
+	rel := s.latestRel
+	s.mu.Unlock()
+
+	var err error
+	if rel == nil {
+		rel, _, err = s.updater.CheckForUpdate()
+		if err != nil || rel == nil {
+			jsonError(w, http.StatusBadRequest, i18n.T("server.noUpdatesAvailable"))
+			return
+		}
+	}
+
+	if err := s.updater.InstallUpdate(rel); err != nil {
+		logbus.Error(logbus.CatUpdater, i18n.T("updater.installStartError"), err.Error())
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	logbus.Info(logbus.CatUpdater, i18n.T("updater.installing", rel.TagName),
+		i18n.T("updater.installingDetail", config.AppVersion))
+
+	jsonResponse(w, http.StatusOK, map[string]string{
+		"status":  "ok",
+		"message": i18n.T("server.startingInstall"),
+	})
+}
+
+func (s *Server) handlePostponeUpdate(w http.ResponseWriter, r *http.Request) {
+	if s.updater == nil {
+		jsonError(w, http.StatusInternalServerError, "Updater service not available")
+		return
+	}
+
+	var body struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Version == "" {
+		jsonError(w, http.StatusUnprocessableEntity, i18n.T("server.versionRequired"))
+		return
+	}
+
+	s.updater.Postpone(body.Version)
+	jsonResponse(w, http.StatusOK, map[string]string{"status": "ok"})
 }

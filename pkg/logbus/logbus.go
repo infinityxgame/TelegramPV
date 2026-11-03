@@ -13,6 +13,8 @@ const (
 	CatSystem   = "SYSTEM"
 	CatTelegram = "TELEGRAM"
 	CatAPI      = "API"
+	CatServer   = "SERVER"
+	CatUpdater  = "UPDATER"
 
 	LevelInfo    = "INFO"
 	LevelWarn    = "WARN"

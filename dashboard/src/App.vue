@@ -1,10 +1,13 @@
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import AuthWizard from './components/AuthWizard.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 import { useAuthToken } from './composables/useAuthToken'
+import { useConfirmModal } from './composables/useConfirmModal'
+import { useUpdater } from './composables/useUpdater'
 import { useI18n } from './i18n'
 import {
+  ArrowUpRight,
   Bot,
   Layers,
   LogOut,
@@ -14,7 +17,8 @@ import {
   Settings,
   User,
   Users,
-  X
+  X,
+  Zap
 } from './icons'
 import { applyLoaderTheme, applyTheme, initTheme } from './utils/theme.js'
 import ChatsView from './views/ChatsView.vue'
@@ -23,6 +27,7 @@ import SettingsView from './views/SettingsView.vue'
 
 const { authHeaders } = useAuthToken()
 const { t, setLocale } = useI18n()
+const { openConfirm } = useConfirmModal()
 
 initTheme()
 
@@ -30,6 +35,46 @@ const activeView = ref('all')
 const mobileMenuOpen = ref(false)
 const bootstrapping = ref(true)
 const showSplash = ref(true)
+
+const api = async (url, options = {}) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...authHeaders()
+    }
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.detail || data.error || t('common.error'))
+  }
+  return data
+}
+
+const showMessage = (msg) => {
+  /* helper en caso de avisos */
+  console.log(msg)
+}
+
+const {
+  version,
+  updateInfo,
+  isUpdating,
+  isUpdateForced,
+  updateProgress,
+  installUpdate,
+  checkForUpdates
+} = useUpdater({ api, showMessage, openConfirm })
+
+let updateCheckTimer
+
+const formatSize = (bytes) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
 
 const selectNav = (view) => {
   activeView.value = view
@@ -191,6 +236,10 @@ onMounted(async () => {
   }
   fontReady.value = true
 
+  // Inicio de comprobación de actualizaciones de fondo
+  setTimeout(() => checkForUpdates(false), 1000)
+  updateCheckTimer = setInterval(() => checkForUpdates(false), 5 * 60 * 1000)
+
   const startBoot = Date.now()
   await checkAuthStatus()
   await loadSettings()
@@ -201,6 +250,12 @@ onMounted(async () => {
   setTimeout(() => {
     bootstrapping.value = false
   }, remaining)
+})
+
+onUnmounted(() => {
+  if (updateCheckTimer) {
+    clearInterval(updateCheckTimer)
+  }
 })
 </script>
 
@@ -240,6 +295,67 @@ onMounted(async () => {
   </transition>
 
   <template v-if="!bootstrapping">
+    <!-- Diálogo de actualización obligatoria -->
+    <div v-if="updateInfo && isUpdateForced" class="update-required-overlay">
+      <div class="update-card">
+        <Zap :size="48" class="update-icon" />
+        <h2>{{ t('update.forcedTitle') }}</h2>
+        <p v-if="!isUpdating">
+          {{ t('update.forcedText', { version: updateInfo.latest }) }}
+        </p>
+
+        <div class="update-action-area" :class="{ 'is-loading': isUpdating }">
+          <button
+            v-if="!isUpdating"
+            class="primary-button update-btn"
+            @click="installUpdate"
+          >
+            <span>{{ t('update.updateNow') }}</span>
+            <ArrowUpRight :size="18" />
+          </button>
+
+          <div v-else class="update-progress-container">
+            <div class="update-status-text">
+              {{
+                updateProgress.status === 'downloading'
+                  ? t('update.statusDownloading')
+                  : updateProgress.status === 'extracting'
+                    ? t('update.statusExtracting')
+                    : updateProgress.status === 'finishing'
+                      ? t('update.statusFinishing')
+                      : t('update.statusStarting')
+              }}
+            </div>
+            <div class="update-progress-bar">
+              <div
+                class="update-progress-fill"
+                :style="{ width: updateProgress.percentage + '%' }"
+              >
+                <div class="nitro-wind">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+            <div class="update-progress-stats">
+              <span
+                >{{ formatSize(updateProgress.downloaded) }} /
+                {{ formatSize(updateProgress.total) }}</span
+              >
+              <span>{{ updateProgress.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="isUpdating" class="update-warning">
+          {{ t('update.doNotClose') }}
+        </div>
+
+        <small>{{
+          t('update.currentVersion', { version: updateInfo.current })
+        }}</small>
+      </div>
+    </div>
+
     <!-- Unauthenticated State: Show AuthWizard without sidebar -->
     <AuthWizard
       v-if="!authStatus.authenticated"
@@ -254,7 +370,7 @@ onMounted(async () => {
         <div class="brand">
           <div class="brand-text">
             <span>Telegram<span class="brand-accent">PV</span></span>
-            <span class="version-tag">v{{ t('app.version') }}</span>
+            <span class="version-tag">v{{ version || t('app.version') }}</span>
           </div>
           <button
             class="mobile-menu-toggle"
@@ -532,5 +648,189 @@ onMounted(async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Update Modal Overlay Styles */
+.update-required-overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--user-bg-base, #07111f), transparent 5%);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.update-card {
+  background: var(--user-surface, #0b1a2a);
+  border: 1px solid var(--user-border, #1b344b);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.update-icon {
+  color: var(--user-primary, #38a7ff);
+  margin-bottom: 20px;
+}
+.update-card h2 {
+  color: #f8fafc;
+  margin-bottom: 12px;
+  font-size: 24px;
+}
+.update-card p {
+  color: var(--user-text-dim, #728ba2);
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+.update-action-area {
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+.update-action-area.is-loading {
+  transform: translateY(-5px);
+}
+.update-progress-container {
+  width: 100%;
+  text-align: left;
+}
+.update-status-text {
+  color: #f8fafc;
+  font-size: 14px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.update-progress-bar {
+  height: 16px;
+  background: var(--user-bg-base, #07111f);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  position: relative;
+  border: 1px solid var(--user-border, #1b344b);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.update-progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--user-bg-top, #163557),
+    var(--user-primary, #38a7ff)
+  );
+  transition: width 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.nitro-wind {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nitro-wind span {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  height: 2px;
+  border-radius: 2px;
+  animation: windBackwards 0.6s linear infinite;
+}
+.nitro-wind span:nth-child(1) {
+  top: 25%;
+  width: 40px;
+  animation-duration: 0.4s;
+}
+.nitro-wind span:nth-child(2) {
+  top: 50%;
+  width: 60px;
+  animation-duration: 0.7s;
+  animation-delay: 0.1s;
+}
+.nitro-wind span:nth-child(3) {
+  top: 75%;
+  width: 30px;
+  animation-duration: 0.5s;
+  animation-delay: 0.2s;
+}
+.nitro-wind span:nth-child(4) {
+  top: 40%;
+  width: 50px;
+  animation-duration: 0.8s;
+  animation-delay: 0.3s;
+}
+
+.update-progress-stats {
+  display: flex;
+  justify-content: space-between;
+  color: var(--user-text-dim, #728ba2);
+  font-size: 12px;
+  font-family: monospace;
+  font-weight: 600;
+}
+.update-warning {
+  color: #f87171;
+  font-size: 13px;
+  margin-top: 15px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.update-btn {
+  width: fit-content;
+  min-width: 240px;
+  height: 50px;
+  padding: 0 30px;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 25px;
+  gap: 10px;
+  background: var(--user-primary, #38a7ff);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.update-btn:hover {
+  transform: scale(1.05) translateY(-2px);
+}
+.update-card small {
+  color: var(--user-text-dim, #728ba2);
+  opacity: 0.8;
+  display: block;
+  margin-top: 15px;
+}
+
+@keyframes windBackwards {
+  from {
+    transform: translateX(300px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
 }
 </style>

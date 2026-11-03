@@ -85,26 +85,6 @@ se podrá fusionar.
 - **Idioma**: los mensajes de commit, comentarios y textos de la interfaz
   están en español, igual que el resto del proyecto.
 
-## Estructura del proyecto
-
-```text
-TelegramDL/
-├── main.go, app.go, sys_*.go   Entrada de la app y bindings de Wails
-├── pkg/
-│   ├── config/       Configuración y valores predeterminados
-│   ├── downloader/   Motor de descargas: engine.go (ciclo de vida),
-│   │                 queue.go (cola/planificación), progress.go
-│   │                 (progreso/throttle), persistence.go (persistencia en
-│   │                 BD), retry.go (reintentos), download.go (ejecución)
-│   ├── listener/     Escucha de mensajes y filtros multimedia
-│   ├── server/       API HTTP, WebSocket y snapshots de estado
-│   ├── storage/      SQLite y migraciones
-│   ├── telegram/     Cliente MTProto y autenticación
-│   └── updater/      Comprobación e instalación de actualizaciones
-└── dashboard/        Panel Vue 3 (src/views, src/components,
-                       src/composables)
-```
-
 ## Enviar cambios
 
 1. Crea una rama descriptiva a partir de `main`.
@@ -119,7 +99,7 @@ TelegramDL/
 ## Reportar bugs y proponer funcionalidades
 
 Abre un issue incluyendo, si aplica: sistema operativo, versión de
-TelegramDL, pasos para reproducir el problema y los logs relevantes (nunca
+TelegramPV, pasos para reproducir el problema y los logs relevantes (nunca
 incluyas tu `API_HASH`, teléfono o archivos de sesión en un reporte
 público).
 

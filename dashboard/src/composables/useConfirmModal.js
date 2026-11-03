@@ -11,7 +11,7 @@ const state = reactive({
 })
 
 export function useConfirmModal() {
-  const confirm = (options) => {
+  const openConfirm = (options) => {
     return new Promise((resolve) => {
       state.title = options.title || 'Confirm'
       state.message = options.message || 'Are you sure?'
@@ -20,17 +20,21 @@ export function useConfirmModal() {
 
       state.onConfirm = () => {
         state.isOpen = false
+        if (options.action) options.action()
         resolve(true)
       }
 
       state.onCancel = () => {
         state.isOpen = false
+        if (options.cancelAction) options.cancelAction()
         resolve(false)
       }
 
       state.isOpen = true
     })
   }
+
+  const confirm = openConfirm
 
   const close = () => {
     state.isOpen = false
@@ -39,6 +43,7 @@ export function useConfirmModal() {
   return {
     state,
     confirm,
+    openConfirm,
     close
   }
 }

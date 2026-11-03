@@ -23,7 +23,7 @@ func TestHandleSaveCredentials(t *testing.T) {
 	defer st.Close()
 
 	cm := telegram.NewClientManager()
-	srv := NewServer(cm, st, nil)
+	srv := NewServer(cm, st, nil, nil)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/auth/credentials", srv.handleSaveCredentials)

@@ -13,6 +13,24 @@ export default {
     settings: 'Ajustes',
     logs: 'Registros del Sistema'
   },
+  update: {
+    forcedTitle: 'Actualización Obligatoria',
+    forcedText:
+      'Hay una nueva versión disponible ({version}). Es necesario actualizar para continuar.',
+    updateNow: 'Actualizar ahora',
+    statusDownloading: 'Descargando actualización...',
+    statusExtracting: 'Extrayendo archivos...',
+    statusFinishing: 'Finalizando e iniciando...',
+    statusStarting: 'Iniciando...',
+    doNotClose: 'Por favor, no cierres la aplicación.',
+    currentVersion: 'Versión actual: {version}',
+    availableTitle: 'Nueva versión disponible',
+    availableText:
+      'Hay una actualización lista ({version}). Se recomienda actualizar para obtener las mejoras.',
+    postpone: 'Posponer',
+    installError: 'Error al iniciar la actualización: {message}',
+    progressError: 'Error: {status}'
+  },
   auth: {
     title: 'Instalación y Configuración',
     subtitle: 'Conecta tu cuenta de Telegram para comenzar',
@@ -135,7 +153,8 @@ export default {
     langSub: 'Idioma de la interfaz y del registro',
     langNote:
       'La primera vez se detecta el idioma de tu sistema automáticamente. Tu elección se guarda y se aplica también al registro de actividad.',
-    saveSuccess: 'Ajustes guardados correctamente'
+    saveSuccess: 'Ajustes guardados correctamente',
+    logout: 'Cerrar sesión'
   },
   logs: {
     title: 'Registros de Actividad',

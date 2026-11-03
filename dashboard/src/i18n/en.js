@@ -13,6 +13,24 @@ export default {
     settings: 'Settings',
     logs: 'System Logs'
   },
+  update: {
+    forcedTitle: 'Required Update',
+    forcedText:
+      'A new version is available ({version}). You must update to continue.',
+    updateNow: 'Update now',
+    statusDownloading: 'Downloading update...',
+    statusExtracting: 'Extracting files...',
+    statusFinishing: 'Finishing and starting...',
+    statusStarting: 'Starting...',
+    doNotClose: 'Please, do not close the application.',
+    currentVersion: 'Current version: {version}',
+    availableTitle: 'New version available',
+    availableText:
+      'An update is ready ({version}). Updating is recommended to get the improvements.',
+    postpone: 'Postpone',
+    installError: 'Failed to start the update: {message}',
+    progressError: 'Error: {status}'
+  },
   auth: {
     title: 'Installation and Setup',
     subtitle: 'Connect your Telegram account to get started',
@@ -135,7 +153,8 @@ export default {
     langSub: 'Interface and log language',
     langNote:
       'The first time your system language is detected automatically. Your choice is saved and applied to system logs.',
-    saveSuccess: 'Settings saved successfully'
+    saveSuccess: 'Settings saved successfully',
+    logout: 'Log out'
   },
   logs: {
     title: 'System Activity Logs',

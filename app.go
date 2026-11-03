@@ -16,12 +16,14 @@ import (
 	"telegrampv/pkg/server"
 	"telegrampv/pkg/storage"
 	"telegrampv/pkg/telegram"
+	"telegrampv/pkg/updater"
 )
 
 type App struct {
 	ctx       context.Context
 	clientMgr *telegram.ClientManager
 	storage   *storage.Storage
+	updater   *updater.AppUpdater
 	server    *server.Server
 	config    config.Config
 	assets    fs.FS
@@ -63,7 +65,9 @@ func NewApp(assets fs.FS) (*App, error) {
 		_ = cm.InitClient(cfg.ApiID, cfg.ApiHash)
 	}
 
-	srv := server.NewServer(cm, st, assets)
+	up := updater.NewAppUpdater()
+
+	srv := server.NewServer(cm, st, up, assets)
 	serverURL, err := srv.Start(config.GetServerHost(), config.GetServerPort())
 	if err != nil {
 		logbus.Warn(logbus.CatSystem, fmt.Sprintf("Server port error: %v, retrying with auto port", err))
@@ -73,6 +77,7 @@ func NewApp(assets fs.FS) (*App, error) {
 	app := &App{
 		clientMgr: cm,
 		storage:   st,
+		updater:   up,
 		server:    srv,
 		config:    cfg,
 		assets:    assets,
@@ -96,6 +101,12 @@ func (a *App) shutdown(ctx context.Context) {
 	}
 	if a.storage != nil {
 		_ = a.storage.Close()
+	}
+}
+
+func (a *App) PostponeUpdate(version string) {
+	if a.updater != nil {
+		a.updater.Postpone(version)
 	}
 }
 

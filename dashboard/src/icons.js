@@ -33,6 +33,7 @@ export {
   Globe,
   Languages,
   Zap,
+  ArrowUpRight,
   ChevronRight,
   Settings2,
   FileText as ScrollText

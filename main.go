@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+	"time"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -15,6 +17,7 @@ import (
 
 	"telegrampv/pkg/config"
 	"telegrampv/pkg/i18n"
+	"telegrampv/pkg/updater"
 )
 
 //go:embed all:dashboard/dist
@@ -33,12 +36,16 @@ func main() {
 		return
 	}
 
+	if hasArgument("--update") {
+		os.Exit(runUpdateMode())
+	}
+
 	runDesktopMode()
 }
 
 func hasArgument(target string) bool {
 	for _, arg := range os.Args[1:] {
-		if arg == target {
+		if strings.EqualFold(arg, target) {
 			return true
 		}
 	}
@@ -47,10 +54,10 @@ func hasArgument(target string) bool {
 
 func printUsage() {
 	fmt.Printf("TelegramPV v%s - Telegram Chat & Channel Manager\n", config.AppVersion)
-	fmt.Println("Usage:")
-	fmt.Println("  TelegramPV.exe            Run GUI Desktop mode")
-	fmt.Println("  TelegramPV.exe --server   Run Headless HTTP Server mode")
-	fmt.Println("  TelegramPV.exe --help     Show this help message")
+	fmt.Println(i18n.T("cli.usageHeader"))
+	fmt.Println(i18n.T("cli.usageDesktop"))
+	fmt.Println(i18n.T("cli.usageServer"))
+	fmt.Println(i18n.T("cli.usageUpdate"))
 }
 
 func runServerMode() {
@@ -69,6 +76,41 @@ func runServerMode() {
 
 	fmt.Println("Shutting down TelegramPV Server...")
 	app.shutdown(context.Background())
+}
+
+func runUpdateMode() int {
+	appUpdater := updater.NewAppUpdater()
+	release, asset, err := appUpdater.CheckForUpdate()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, i18n.T("cli.checkError"), err)
+		return 1
+	}
+	if release == nil || asset == nil {
+		fmt.Printf(i18n.T("cli.alreadyUpdated"), config.AppVersion)
+		return 0
+	}
+
+	fmt.Printf(i18n.T("cli.updating"), config.AppVersion, release.TagName, asset.Name)
+	if err := appUpdater.InstallUpdate(release); err != nil {
+		fmt.Fprintf(os.Stderr, i18n.T("cli.installError"), err)
+		return 1
+	}
+
+	lastStatus := ""
+	for {
+		progress := appUpdater.GetProgress()
+		if progress.Status != lastStatus {
+			if strings.HasPrefix(progress.Status, "error:") {
+				fmt.Fprintln(os.Stderr, progress.Status)
+				return 1
+			}
+			if progress.Status != "" {
+				fmt.Printf(i18n.T("cli.progressState"), progress.Status, progress.Percentage)
+			}
+			lastStatus = progress.Status
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
 }
 
 func runDesktopMode() {
