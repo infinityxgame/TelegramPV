@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,21 @@ import (
 
 	"telegrampv/pkg/logbus"
 )
+
+func readConfigValue(db *sql.DB, key string) string {
+	var val string
+	// 1. Consultar en app_config (esquema oficial de TelegramDL / tgdown)
+	err := db.QueryRow("SELECT value FROM app_config WHERE key = ? OR key = ? LIMIT 1", key, "tgdl_"+key).Scan(&val)
+	if err == nil && strings.TrimSpace(val) != "" {
+		return strings.TrimSpace(val)
+	}
+	// 2. Consultar en config (esquema alternativo o de versiones previas)
+	err = db.QueryRow("SELECT value FROM config WHERE key = ? OR key = ? LIMIT 1", key, "tgdl_"+key).Scan(&val)
+	if err == nil && strings.TrimSpace(val) != "" {
+		return strings.TrimSpace(val)
+	}
+	return ""
+}
 
 // CheckAndMigrateFromTelegramDL comprueba si existe la carpeta de TelegramDL (.tgdown)
 // con una base de datos y sesión activa de Telegram, y las copia a TelegramPV (.telegrampv)
@@ -26,16 +42,19 @@ func CheckAndMigrateFromTelegramDL(targetStorage *Storage, targetDataDir string)
 	}
 
 	if targetApiID != "" && targetApiHash != "" && hasTargetSession {
+		log.Printf("[MIGRATE] TelegramPV ya cuenta con credenciales y sesion activa. No requiere migracion.")
 		return
 	}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
+		log.Printf("[MIGRATE] No se pudo obtener el directorio home del usuario: %v", err)
 		return
 	}
 
 	tgdownDir := filepath.Join(home, ".tgdown")
 	if fi, err := os.Stat(tgdownDir); err != nil || !fi.IsDir() {
+		log.Printf("[MIGRATE] No existe la carpeta .tgdown en %s", home)
 		return
 	}
 
@@ -44,34 +63,38 @@ func CheckAndMigrateFromTelegramDL(targetStorage *Storage, targetDataDir string)
 
 	sessionFi, err := os.Stat(tgdownSessionPath)
 	if err != nil || sessionFi.Size() == 0 {
+		log.Printf("[MIGRATE] No existe el archivo de sesion tg_session.json en .tgdown")
 		return
 	}
 
 	if _, err := os.Stat(tgdownDBPath); err != nil {
+		log.Printf("[MIGRATE] No existe la base de datos tgdown.sqlite3 en .tgdown")
 		return
 	}
 
-	srcDB, err := sql.Open("sqlite", tgdownDBPath)
+	dsn := tgdownDBPath + "?_pragma=busy_timeout(5000)"
+	srcDB, err := sql.Open("sqlite", dsn)
 	if err != nil {
+		log.Printf("[MIGRATE] Error al abrir la base de datos tgdown.sqlite3: %v", err)
 		return
 	}
 	defer srcDB.Close()
 
-	var apiID, apiHash, phone, language string
-	_ = srcDB.QueryRow("SELECT value FROM config WHERE key = 'api_id'").Scan(&apiID)
-	_ = srcDB.QueryRow("SELECT value FROM config WHERE key = 'api_hash'").Scan(&apiHash)
-	_ = srcDB.QueryRow("SELECT value FROM config WHERE key = 'phone'").Scan(&phone)
-	_ = srcDB.QueryRow("SELECT value FROM config WHERE key = 'language'").Scan(&language)
-
-	apiID = strings.TrimSpace(apiID)
-	apiHash = strings.TrimSpace(apiHash)
+	apiID := readConfigValue(srcDB, "api_id")
+	apiHash := readConfigValue(srcDB, "api_hash")
+	phone := readConfigValue(srcDB, "phone")
+	language := readConfigValue(srcDB, "language")
 
 	if apiID == "" || apiHash == "" {
+		log.Printf("[MIGRATE] No se encontraron credenciales de API (api_id/api_hash) en app_config o config de .tgdown")
 		return
 	}
 
+	log.Printf("[MIGRATE] Importando credenciales de TelegramDL: api_id=%s, phone=%s", apiID, phone)
+
 	if err := copyFile(tgdownSessionPath, targetSessionPath); err != nil {
-		logbus.Warn(logbus.CatSystem, "No se pudo copiar la sesion de TelegramDL: "+err.Error())
+		logbus.Warn(logbus.CatSystem, "No se pudo copiar la sesion de TelegramDL", err.Error())
+		log.Printf("[MIGRATE] Error al copiar archivo de sesion: %v", err)
 		return
 	}
 
@@ -84,6 +107,7 @@ func CheckAndMigrateFromTelegramDL(targetStorage *Storage, targetDataDir string)
 		_ = targetStorage.SaveConfigKey("language", language)
 	}
 
+	log.Printf("[MIGRATE] Migracion desde TelegramDL completada con exito.")
 	logbus.Success(logbus.CatSystem, "Sesion y credenciales importadas exitosamente desde TelegramDL", "")
 }
 

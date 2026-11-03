@@ -138,10 +138,10 @@ func runDesktopMode() {
 
 	err = wails.Run(&options.App{
 		Title:             "TelegramPV",
-		Width:             1200,
-		Height:            640,
-		MinWidth:          900,
-		MinHeight:         600,
+		Width:             1280,
+		Height:            720,
+		MinWidth:          950,
+		MinHeight:         680,
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
