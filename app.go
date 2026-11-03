@@ -50,6 +50,9 @@ func NewApp(assets fs.FS) (*App, error) {
 
 	config.SecureDataDir(dbPath, dbPath+"-wal", dbPath+"-shm")
 
+	// Comprobar y migrar sesion/credenciales desde TelegramDL (.tgdown) si es la primera vez
+	storage.CheckAndMigrateFromTelegramDL(st, config.DataDir)
+
 	cfg, err := st.LoadConfig(config.DefaultConfig())
 	if err != nil {
 		cfg = config.DefaultConfig()

@@ -60,7 +60,19 @@ func printUsage() {
 	fmt.Println(i18n.T("cli.usageUpdate"))
 }
 
+func checkConflictAndExit() bool {
+	if isTelegramDLRunning() {
+		showNotice("TelegramDL se esta ejecutando. No es posible abrir TelegramPV al mismo tiempo porque comparten la misma sesion de Telegram. Por favor, cierra TelegramDL antes de abrir TelegramPV.")
+		return true
+	}
+	return false
+}
+
 func runServerMode() {
+	if checkConflictAndExit() {
+		os.Exit(1)
+	}
+
 	fmt.Println("Starting TelegramPV in Headless Server Mode...")
 	app, err := NewApp(assets)
 	if err != nil {
@@ -114,6 +126,10 @@ func runUpdateMode() int {
 }
 
 func runDesktopMode() {
+	if checkConflictAndExit() {
+		return
+	}
+
 	app, err := NewApp(assets)
 	if err != nil {
 		fmt.Printf("Error launching application: %v\n", err)
