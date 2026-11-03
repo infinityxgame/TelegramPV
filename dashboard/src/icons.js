@@ -1,3 +1,19 @@
+import { h } from 'vue'
+import { HugeiconsIcon } from '@hugeicons/vue'
+import { FlashIcon } from '@hugeicons/core-free-icons'
+
+const STROKE_WIDTH = 1.8
+
+const createIcon = (glyph) => ({
+  inheritAttrs: false,
+  setup(_, { attrs }) {
+    return () =>
+      h(HugeiconsIcon, { icon: glyph, strokeWidth: STROKE_WIDTH, ...attrs })
+  }
+})
+
+export const Zap = createIcon(FlashIcon)
+
 export {
   Folder,
   Users,
@@ -33,7 +49,6 @@ export {
   Palette,
   Globe,
   Languages,
-  Zap,
   ArrowUpRight,
   ChevronRight,
   Settings2,
