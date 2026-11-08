@@ -45,10 +45,6 @@ const { t } = useI18n()
     </div>
 
     <div class="chat-actions">
-      <span v-if="chat.unread_count > 0" class="unread-pill">
-        {{ chat.unread_count }}
-      </span>
-
       <button
         class="delete-chat-btn"
         :title="t('chats.leaveAction')"
@@ -180,15 +176,6 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.unread-pill {
-  background: var(--user-primary, #38a7ff);
-  color: var(--user-bg-base, #07111f);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
 }
 
 .delete-chat-btn {

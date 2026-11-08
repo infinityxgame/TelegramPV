@@ -535,7 +535,6 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 			}
 
 			var chatItem storage.Chat
-			chatItem.UnreadCount = d.UnreadCount
 
 			switch p := d.Peer.(type) {
 			case *tg.PeerChannel:
@@ -551,7 +550,6 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 					chatItem.Title = ch.Title
 					chatItem.Username = ch.Username
 					chatItem.AccessHash = ch.AccessHash
-					chatItem.MembersCount = ch.ParticipantsCount
 
 					if ch.Broadcast {
 						chatItem.Type = "channel"
@@ -571,7 +569,6 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 					chatItem.ID = canonicID
 					chatItem.Title = ch.Title
 					chatItem.Type = "group"
-					chatItem.MembersCount = ch.ParticipantsCount
 					allChats = append(allChats, chatItem)
 				}
 			case *tg.PeerUser:

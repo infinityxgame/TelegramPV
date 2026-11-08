@@ -267,6 +267,8 @@ func (s *Storage) GetChats(category string, search string) ([]Chat, error) {
 		if err := rows.Scan(&c.ID, &c.Type, &c.Title, &c.Username, &c.UnreadCount, &c.MembersCount, &c.AccessHash, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
+		c.UnreadCount = 0
+		c.MembersCount = 0
 		chats = append(chats, c)
 	}
 
