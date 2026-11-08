@@ -373,29 +373,33 @@ onUnmounted(() => {
             <img :src="logoUrl" alt="TelegramPV" />
           </span>
           <div class="brand-text">
-            <span class="brand-title">
-              <span class="b1">T</span>
-              <span class="b2">e</span>
-              <span class="b3">l</span>
-              <span class="b4">e</span>
-              <span class="b5">g</span>
-              <span class="b6">r</span>
-              <span class="b7">a</span>
-              <span class="b8">m</span>
-              <span class="brand-accent b9">P</span>
-              <span class="brand-accent b10">V</span>
-            </span>
-            <span class="brand-version">
-              <span
-                v-for="(char, i) in (
-                  'v' + (version || t('app.version') || '1.0.3')
-                ).split('')"
-                :key="i"
-                :class="'b' + (i + 1)"
-              >
-                {{ char }}
-              </span>
-            </span>
+            <svg viewBox="0 0 130 45" class="brand-svg">
+              <!-- Nombre de la App animado letra a letra estilo loader (writeAndFill) -->
+              <text x="0" y="18" class="brand-logo-text">
+                <tspan class="b1">T</tspan>
+                <tspan class="b2">e</tspan>
+                <tspan class="b3">l</tspan>
+                <tspan class="b4">e</tspan>
+                <tspan class="b5">g</tspan>
+                <tspan class="b6">r</tspan>
+                <tspan class="b7">a</tspan>
+                <tspan class="b8">m</tspan>
+                <tspan class="brand-accent b9">P</tspan>
+                <tspan class="brand-accent b10">V</tspan>
+              </text>
+              <!-- Versión animada letra a letra estilo loader -->
+              <text x="0" y="38" class="brand-version-text">
+                <tspan
+                  v-for="(char, i) in (
+                    'v' + (version || t('app.version') || '1.0.3')
+                  ).split('')"
+                  :key="i"
+                  :class="'b' + (i + 1)"
+                >
+                  {{ char }}
+                </tspan>
+              </text>
+            </svg>
           </div>
           <button
             class="mobile-menu-toggle"

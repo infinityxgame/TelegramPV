@@ -120,87 +120,84 @@ html.theme-light select option {
 .brand-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.15;
+  line-height: 1.1;
   user-select: none;
 }
-.brand-title {
-  font:
-    700 18px 'Space Grotesk',
-    sans-serif;
-  color: #f3f8ff;
-  letter-spacing: -0.01em;
-  display: flex;
+.brand-svg {
+  width: 130px;
+  height: 45px;
+  overflow: visible;
 }
-.brand-title span {
-  display: inline-block;
-  animation: brandLetterFloat 3s ease-in-out infinite;
+.brand-logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  filter: drop-shadow(0 0 10px var(--user-glow, rgba(56, 167, 255, 0.4)));
 }
-.brand-title .brand-accent {
-  color: var(--user-accent);
+.brand-logo-text tspan {
+  fill: #f3f8ff;
+  stroke: #f3f8ff;
+  stroke-width: 0.5px;
+  animation: brandLetterWave 3s ease-in-out infinite;
 }
-.brand-version {
-  font:
-    500 11px 'DM Sans',
-    sans-serif;
-  color: var(--user-text-dim);
-  opacity: 0.85;
-  margin-top: 2px;
-  letter-spacing: 0.04em;
-  display: flex;
+.brand-logo-text .brand-accent {
+  fill: var(--user-accent);
+  stroke: var(--user-accent);
 }
-.brand-version span {
-  display: inline-block;
-  animation: brandLetterFloat 3s ease-in-out infinite;
+.brand-version-text {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+}
+.brand-version-text tspan {
+  fill: var(--user-text-dim);
+  stroke: var(--user-text-dim);
+  stroke-width: 0.3px;
+  animation: brandLetterWave 3s ease-in-out infinite;
 }
 
-.brand-title .b1,
-.brand-version .b1 {
+.b1 {
   animation-delay: 0s;
 }
-.brand-title .b2,
-.brand-version .b2 {
-  animation-delay: 0.1s;
+.b2 {
+  animation-delay: 0.12s;
 }
-.brand-title .b3,
-.brand-version .b3 {
-  animation-delay: 0.2s;
+.b3 {
+  animation-delay: 0.24s;
 }
-.brand-title .b4,
-.brand-version .b4 {
-  animation-delay: 0.3s;
+.b4 {
+  animation-delay: 0.36s;
 }
-.brand-title .b5,
-.brand-version .b5 {
-  animation-delay: 0.4s;
+.b5 {
+  animation-delay: 0.48s;
 }
-.brand-title .b6,
-.brand-version .b6 {
-  animation-delay: 0.5s;
-}
-.brand-title .b7,
-.brand-version .b7 {
+.b6 {
   animation-delay: 0.6s;
 }
-.brand-title .b8,
-.brand-version .b8 {
-  animation-delay: 0.7s;
+.b7 {
+  animation-delay: 0.72s;
 }
-.brand-title .b9,
-.brand-version .b9 {
-  animation-delay: 0.8s;
+.b8 {
+  animation-delay: 0.84s;
 }
-.brand-title .b10,
-.brand-version .b10 {
-  animation-delay: 0.9s;
+.b9 {
+  animation-delay: 0.96s;
+}
+.b10 {
+  animation-delay: 1.08s;
 }
 
-@keyframes brandLetterFloat {
+@keyframes brandLetterWave {
   0%,
   100% {
-    transform: translateY(0);
+    dy: 0px;
+    transform: translateY(0px);
+    fill-opacity: 1;
   }
   50% {
-    transform: translateY(-3.5px);
+    dy: -4px;
+    transform: translateY(-4px);
+    fill-opacity: 0.7;
   }
 }
 
