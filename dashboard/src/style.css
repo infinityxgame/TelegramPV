@@ -120,71 +120,77 @@ html.theme-light select option {
 .brand-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
+  line-height: 1.15;
+  user-select: none;
 }
-.brand-svg {
-  width: 130px;
-  height: 45px;
-  overflow: visible;
-}
-.brand-logo-text {
+.brand-title {
   font:
     700 18px 'Space Grotesk',
     sans-serif;
-  fill: #f3f8ff;
+  color: #f3f8ff;
+  letter-spacing: -0.01em;
+  display: flex;
 }
-.brand-logo-text .brand-accent {
-  fill: var(--user-accent);
+.brand-title span {
+  display: inline-block;
+  animation: brandLetterFloat 3s ease-in-out infinite;
 }
-.brand-version-text {
+.brand-title .brand-accent {
+  color: var(--user-accent);
+}
+.brand-version {
   font:
     500 11px 'DM Sans',
     sans-serif;
-  fill: var(--user-text-dim);
-  opacity: 0.8;
+  color: var(--user-text-dim);
+  opacity: 0.85;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+  display: flex;
 }
-.brand-logo-text tspan,
-.brand-version-text tspan {
-  animation: brandLetterFloat 4s ease-in-out infinite;
+.brand-version span {
+  display: inline-block;
+  animation: brandLetterFloat 3s ease-in-out infinite;
 }
-.brand-logo-text .b1,
-.brand-version-text .b1 {
+
+.brand-title .b1,
+.brand-version .b1 {
   animation-delay: 0s;
 }
-.brand-logo-text .b2,
-.brand-version-text .b2 {
+.brand-title .b2,
+.brand-version .b2 {
   animation-delay: 0.1s;
 }
-.brand-logo-text .b3,
-.brand-version-text .b3 {
+.brand-title .b3,
+.brand-version .b3 {
   animation-delay: 0.2s;
 }
-.brand-logo-text .b4,
-.brand-version-text .b4 {
+.brand-title .b4,
+.brand-version .b4 {
   animation-delay: 0.3s;
 }
-.brand-logo-text .b5,
-.brand-version-text .b5 {
+.brand-title .b5,
+.brand-version .b5 {
   animation-delay: 0.4s;
 }
-.brand-logo-text .b6,
-.brand-version-text .b6 {
+.brand-title .b6,
+.brand-version .b6 {
   animation-delay: 0.5s;
 }
-.brand-logo-text .b7,
-.brand-version-text .b7 {
+.brand-title .b7,
+.brand-version .b7 {
   animation-delay: 0.6s;
 }
-.brand-logo-text .b8,
-.brand-version-text .b8 {
+.brand-title .b8,
+.brand-version .b8 {
   animation-delay: 0.7s;
 }
-.brand-logo-text .b9,
-.brand-version-text .b9 {
+.brand-title .b9,
+.brand-version .b9 {
   animation-delay: 0.8s;
 }
-.brand-logo-text .b10,
-.brand-version-text .b10 {
+.brand-title .b10,
+.brand-version .b10 {
   animation-delay: 0.9s;
 }
 
@@ -194,7 +200,7 @@ html.theme-light select option {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-2px);
+    transform: translateY(-3.5px);
   }
 }
 
