@@ -50,6 +50,7 @@ export {
   Globe,
   Languages,
   ArrowUpRight,
+  ExternalLink,
   ChevronRight,
   Settings2,
   FileText as ScrollText

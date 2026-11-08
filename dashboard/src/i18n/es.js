@@ -128,6 +128,7 @@ export default {
     channel: 'Canal',
     bot: 'Bot',
     user: 'Usuario',
+    openAction: 'Abrir en Telegram',
     leaveAction: 'Salir / Eliminar'
   },
   settings: {

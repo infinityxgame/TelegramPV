@@ -128,6 +128,7 @@ export default {
     channel: 'Channel',
     bot: 'Bot',
     user: 'User',
+    openAction: 'Open in Telegram',
     leaveAction: 'Leave / Delete'
   },
   settings: {

@@ -1,8 +1,17 @@
 <script setup>
 import { useI18n } from '../i18n'
-import { Bot, CheckSquare, Radio, Square, Trash2, User, Users } from '../icons'
+import {
+  Bot,
+  CheckSquare,
+  ExternalLink,
+  Radio,
+  Square,
+  Trash2,
+  User,
+  Users
+} from '../icons'
 
-defineProps({
+const props = defineProps({
   chat: {
     type: Object,
     required: true
@@ -15,6 +24,27 @@ defineProps({
 
 const emit = defineEmits(['toggle-select', 'leave'])
 const { t } = useI18n()
+
+// Abrir el chat directamente en la aplicación de Telegram usando el protocolo tg://
+const openInTelegram = () => {
+  if (!props.chat) return
+  let url
+  if (props.chat.username) {
+    url = `tg://resolve?domain=${props.chat.username}`
+  } else {
+    const rawId = String(props.chat.id)
+    if (rawId.startsWith('-100')) {
+      const cleanId = rawId.replace('-100', '')
+      url = `tg://openmessage?chat_id=${cleanId}`
+    } else if (rawId.startsWith('-')) {
+      const cleanId = rawId.replace('-', '')
+      url = `tg://openmessage?chat_id=${cleanId}`
+    } else {
+      url = `tg://openmessage?user_id=${rawId}`
+    }
+  }
+  window.open(url, '_blank')
+}
 </script>
 
 <template>
@@ -45,6 +75,14 @@ const { t } = useI18n()
     </div>
 
     <div class="chat-actions">
+      <button
+        class="open-chat-btn"
+        :title="t('chats.openAction')"
+        @click.stop="openInTelegram"
+      >
+        <ExternalLink :size="16" />
+      </button>
+
       <button
         class="delete-chat-btn"
         :title="t('chats.leaveAction')"
@@ -176,6 +214,24 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.open-chat-btn {
+  background: transparent;
+  border: 0;
+  color: var(--user-accent, #5ebcff);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+.open-chat-btn:hover {
+  background: var(--user-surface-light, #0e2032);
+  color: var(--user-primary, #38a7ff);
 }
 
 .delete-chat-btn {
