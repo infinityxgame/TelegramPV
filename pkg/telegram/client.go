@@ -467,172 +467,217 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 		return nil, errors.New(i18n.T("telegram.notConnectedShort"))
 	}
 
-	var offsetPeer tg.InputPeerClass = &tg.InputPeerEmpty{}
-	var offsetID int = 0
-	var offsetDate int = 0
-
 	var allChats []storage.Chat
 	seenIDs := make(map[int64]bool)
 
-	for page := 0; page < 20; page++ {
-		res, err := raw.MessagesGetDialogs(ctx, &tg.MessagesGetDialogsRequest{
-			OffsetPeer: offsetPeer,
-			OffsetID:   offsetID,
-			OffsetDate: offsetDate,
-			Limit:      100,
-		})
-		if err != nil {
-			return nil, fmt.Errorf(i18n.T("telegram.fetchDialogsError"), err)
-		}
+	// Recorrer carpeta principal (0) y archivados (1)
+	folderIDs := []int{0, 1}
 
-		var dialogs []tg.DialogClass
-		var chats []tg.ChatClass
-		var users []tg.UserClass
-		var messages []tg.MessageClass
+	for _, folderID := range folderIDs {
+		var offsetPeer tg.InputPeerClass = &tg.InputPeerEmpty{}
+		var offsetID int = 0
+		var offsetDate int = 0
 
-		switch d := res.(type) {
-		case *tg.MessagesDialogs:
-			dialogs = d.Dialogs
-			chats = d.Chats
-			users = d.Users
-			messages = d.Messages
-		case *tg.MessagesDialogsSlice:
-			dialogs = d.Dialogs
-			chats = d.Chats
-			users = d.Users
-			messages = d.Messages
-		case *tg.MessagesDialogsNotModified:
-			break
-		}
-
-		if len(dialogs) == 0 && len(chats) == 0 {
-			break
-		}
-
-		channelsMap := make(map[int64]*tg.Channel)
-		chatsMap := make(map[int64]*tg.Chat)
-		usersMap := make(map[int64]*tg.User)
-
-		for _, c := range chats {
-			switch ch := c.(type) {
-			case *tg.Channel:
-				channelsMap[ch.ID] = ch
-				cm.mu.Lock()
-				cm.channelAccessHashes[ch.ID] = ch.AccessHash
-				cm.mu.Unlock()
-			case *tg.Chat:
-				chatsMap[ch.ID] = ch
+		for page := 0; page < 50; page++ {
+			req := &tg.MessagesGetDialogsRequest{
+				OffsetPeer: offsetPeer,
+				OffsetID:   offsetID,
+				OffsetDate: offsetDate,
+				Limit:      100,
 			}
-		}
-
-		for _, u := range users {
-			if usr, ok := u.(*tg.User); ok {
-				usersMap[usr.ID] = usr
-				cm.mu.Lock()
-				cm.userAccessHashes[usr.ID] = usr.AccessHash
-				cm.mu.Unlock()
-			}
-		}
-
-		for _, dlg := range dialogs {
-			d, ok := dlg.(*tg.Dialog)
-			if !ok {
-				continue
+			if folderID == 1 {
+				req.FolderID = 1
 			}
 
-			var chatItem storage.Chat
+			res, err := raw.MessagesGetDialogs(ctx, req)
+			if err != nil {
+				if folderID == 1 {
+					break
+				}
+				return nil, fmt.Errorf(i18n.T("telegram.fetchDialogsError"), err)
+			}
 
-			switch p := d.Peer.(type) {
-			case *tg.PeerChannel:
-				if ch, exists := channelsMap[p.ChannelID]; exists {
-					// Canal con prefijo canónico -100...
-					canonicID, _ := strconv.ParseInt(fmt.Sprintf("-100%d", ch.ID), 10, 64)
-					if seenIDs[canonicID] {
-						continue
+			var dialogs []tg.DialogClass
+			var chats []tg.ChatClass
+			var users []tg.UserClass
+			var messages []tg.MessageClass
+
+			switch d := res.(type) {
+			case *tg.MessagesDialogs:
+				dialogs = d.Dialogs
+				chats = d.Chats
+				users = d.Users
+				messages = d.Messages
+			case *tg.MessagesDialogsSlice:
+				dialogs = d.Dialogs
+				chats = d.Chats
+				users = d.Users
+				messages = d.Messages
+			case *tg.MessagesDialogsNotModified:
+				break
+			}
+
+			if len(dialogs) == 0 && len(chats) == 0 {
+				break
+			}
+
+			channelsMap := make(map[int64]*tg.Channel)
+			chatsMap := make(map[int64]*tg.Chat)
+			usersMap := make(map[int64]*tg.User)
+
+			for _, c := range chats {
+				switch ch := c.(type) {
+				case *tg.Channel:
+					channelsMap[ch.ID] = ch
+					cm.mu.Lock()
+					cm.channelAccessHashes[ch.ID] = ch.AccessHash
+					cm.mu.Unlock()
+				case *tg.ChannelForbidden:
+					channelsMap[ch.ID] = &tg.Channel{
+						ID:         ch.ID,
+						AccessHash: ch.AccessHash,
+						Title:      ch.Title,
+						Broadcast:  ch.Broadcast,
 					}
-					seenIDs[canonicID] = true
+					cm.mu.Lock()
+					cm.channelAccessHashes[ch.ID] = ch.AccessHash
+					cm.mu.Unlock()
+				case *tg.Chat:
+					chatsMap[ch.ID] = ch
+				case *tg.ChatForbidden:
+					chatsMap[ch.ID] = &tg.Chat{
+						ID:    ch.ID,
+						Title: ch.Title,
+					}
+				}
+			}
 
-					chatItem.ID = canonicID
-					chatItem.Title = ch.Title
-					chatItem.Username = ch.Username
-					chatItem.AccessHash = ch.AccessHash
+			for _, u := range users {
+				if usr, ok := u.(*tg.User); ok {
+					usersMap[usr.ID] = usr
+					cm.mu.Lock()
+					cm.userAccessHashes[usr.ID] = usr.AccessHash
+					cm.mu.Unlock()
+				}
+			}
 
-					if ch.Broadcast {
-						chatItem.Type = "channel"
-					} else {
+			for _, dlg := range dialogs {
+				d, ok := dlg.(*tg.Dialog)
+				if !ok {
+					continue
+				}
+
+				var chatItem storage.Chat
+
+				switch p := d.Peer.(type) {
+				case *tg.PeerChannel:
+					if ch, exists := channelsMap[p.ChannelID]; exists {
+						canonicID, _ := strconv.ParseInt(fmt.Sprintf("-100%d", ch.ID), 10, 64)
+						if seenIDs[canonicID] {
+							continue
+						}
+						seenIDs[canonicID] = true
+
+						chatItem.ID = canonicID
+						chatItem.Title = ch.Title
+						chatItem.Username = ch.Username
+						chatItem.AccessHash = ch.AccessHash
+
+						if ch.Broadcast {
+							chatItem.Type = "channel"
+						} else {
+							chatItem.Type = "group"
+						}
+						allChats = append(allChats, chatItem)
+					}
+				case *tg.PeerChat:
+					if ch, exists := chatsMap[p.ChatID]; exists {
+						canonicID := -ch.ID
+						if seenIDs[canonicID] {
+							continue
+						}
+						seenIDs[canonicID] = true
+
+						chatItem.ID = canonicID
+						chatItem.Title = ch.Title
 						chatItem.Type = "group"
+						allChats = append(allChats, chatItem)
 					}
-					allChats = append(allChats, chatItem)
-				}
-			case *tg.PeerChat:
-				if ch, exists := chatsMap[p.ChatID]; exists {
-					canonicID := -ch.ID
-					if seenIDs[canonicID] {
-						continue
-					}
-					seenIDs[canonicID] = true
+				case *tg.PeerUser:
+					if usr, exists := usersMap[p.UserID]; exists {
+						if usr.Self {
+							continue // Omitir Saved Messages
+						}
+						canonicID := usr.ID
+						if seenIDs[canonicID] {
+							continue
+						}
+						seenIDs[canonicID] = true
 
-					chatItem.ID = canonicID
-					chatItem.Title = ch.Title
-					chatItem.Type = "group"
-					allChats = append(allChats, chatItem)
-				}
-			case *tg.PeerUser:
-				if usr, exists := usersMap[p.UserID]; exists {
-					if usr.Self {
-						continue // Omitir Saved Messages
-					}
-					canonicID := usr.ID
-					if seenIDs[canonicID] {
-						continue
-					}
-					seenIDs[canonicID] = true
+						chatItem.ID = canonicID
+						chatItem.Title = userDisplayName(usr)
+						chatItem.Username = usr.Username
+						chatItem.AccessHash = usr.AccessHash
 
-					chatItem.ID = canonicID
-					chatItem.Title = userDisplayName(usr)
-					chatItem.Username = usr.Username
-					chatItem.AccessHash = usr.AccessHash
-
-					if usr.Bot {
-						chatItem.Type = "bot"
-					} else {
-						chatItem.Type = "user"
+						if usr.Bot {
+							chatItem.Type = "bot"
+						} else {
+							chatItem.Type = "user"
+						}
+						allChats = append(allChats, chatItem)
 					}
-					allChats = append(allChats, chatItem)
 				}
 			}
-		}
 
-		if len(messages) == 0 {
-			break
-		}
+			if len(messages) == 0 {
+				break
+			}
 
-		lastMsg, ok := messages[len(messages)-1].(*tg.Message)
-		if !ok {
-			break
-		}
-		offsetID = lastMsg.ID
-		offsetDate = lastMsg.Date
+			lastMsgClass := messages[len(messages)-1]
+			var lastID int
+			var lastDate int
+			var lastPeer tg.PeerClass
 
-		switch p := lastMsg.PeerID.(type) {
-		case *tg.PeerChannel:
-			cm.mu.RLock()
-			hash := cm.channelAccessHashes[p.ChannelID]
-			cm.mu.RUnlock()
-			offsetPeer = &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
-		case *tg.PeerUser:
-			cm.mu.RLock()
-			hash := cm.userAccessHashes[p.UserID]
-			cm.mu.RUnlock()
-			offsetPeer = &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
-		case *tg.PeerChat:
-			offsetPeer = &tg.InputPeerChat{ChatID: p.ChatID}
-		default:
-			offsetPeer = &tg.InputPeerEmpty{}
-		}
+			switch m := lastMsgClass.(type) {
+			case *tg.Message:
+				lastID = m.ID
+				lastDate = m.Date
+				lastPeer = m.PeerID
+			case *tg.MessageService:
+				lastID = m.ID
+				lastDate = m.Date
+				lastPeer = m.PeerID
+			}
 
-		if len(dialogs) < 100 {
-			break
+			if lastID == 0 {
+				break
+			}
+
+			offsetID = lastID
+			offsetDate = lastDate
+
+			if lastPeer != nil {
+				switch p := lastPeer.(type) {
+				case *tg.PeerChannel:
+					cm.mu.RLock()
+					hash := cm.channelAccessHashes[p.ChannelID]
+					cm.mu.RUnlock()
+					offsetPeer = &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
+				case *tg.PeerUser:
+					cm.mu.RLock()
+					hash := cm.userAccessHashes[p.UserID]
+					cm.mu.RUnlock()
+					offsetPeer = &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
+				case *tg.PeerChat:
+					offsetPeer = &tg.InputPeerChat{ChatID: p.ChatID}
+				default:
+					offsetPeer = &tg.InputPeerEmpty{}
+				}
+			}
+
+			if len(dialogs) < 100 {
+				break
+			}
 		}
 	}
 
