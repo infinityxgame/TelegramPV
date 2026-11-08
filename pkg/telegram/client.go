@@ -445,9 +445,15 @@ func (cm *ClientManager) TwoFactor(ctx context.Context, password string) error {
 }
 
 func userDisplayName(u *tg.User) string {
+	if u.Deleted {
+		return "Deleted Account"
+	}
 	name := strings.TrimSpace(u.FirstName + " " + u.LastName)
 	if name == "" {
 		name = strings.TrimSpace(u.Username)
+	}
+	if name == "" {
+		name = fmt.Sprintf("User %d", u.ID)
 	}
 	return name
 }

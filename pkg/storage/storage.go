@@ -269,6 +269,13 @@ func (s *Storage) GetChats(category string, search string) ([]Chat, error) {
 		}
 		c.UnreadCount = 0
 		c.MembersCount = 0
+		if strings.TrimSpace(c.Title) == "" {
+			if c.Username != "" {
+				c.Title = c.Username
+			} else {
+				c.Title = "Deleted Account"
+			}
+		}
 		chats = append(chats, c)
 	}
 

@@ -34,16 +34,8 @@ const openInTelegram = async () => {
   if (props.chat.username) {
     url = `tg://resolve?domain=${props.chat.username}`
   } else {
-    const rawId = String(props.chat.id)
-    if (rawId.startsWith('-100')) {
-      const cleanId = rawId.replace('-100', '')
-      url = `tg://openmessage?chat_id=${cleanId}`
-    } else if (rawId.startsWith('-')) {
-      const cleanId = rawId.replace('-', '')
-      url = `tg://openmessage?chat_id=${cleanId}`
-    } else {
-      url = `tg://openmessage?user_id=${rawId}`
-    }
+    const cleanId = String(props.chat.id).replace(/^-100/, '').replace(/^-/, '')
+    url = `tg://openmessage?chat_id=${cleanId}`
   }
 
   try {
