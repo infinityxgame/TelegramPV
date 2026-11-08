@@ -1,0 +1,224 @@
+version: '3'
+
+tasks:
+  go:mod:tidy:
+    summary: Runs `go mod tidy`
+    internal: true
+    run: once
+    cmds:
+      - go mod tidy
+
+  install:frontend:deps:
+    summary: Install frontend dependencies
+    run: once
+    cmds:
+      - task: install:frontend:deps:{{.PACKAGE_MANAGER}}
+
+  install:frontend:deps:npm:
+    dir: dashboard
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules
+    cmds:
+      - npm install
+
+  install:frontend:deps:bun:
+    dir: dashboard
+    sources:
+      - package.json
+      - bun.lock
+      - bun.lockb
+    generates:
+      - node_modules
+    preconditions:
+      - sh: bun --version
+        msg: "bun not found"
+    cmds:
+      - bun install
+
+  install:frontend:deps:pnpm:
+    dir: dashboard
+    sources:
+      - package.json
+      - pnpm-lock.yaml
+    generates:
+      - node_modules
+    status:
+      - test -d node_modules
+    cmds:
+      - pnpm install --prefer-offline
+
+  install:frontend:deps:yarn:
+    dir: dashboard
+    sources:
+      - package.json
+      - yarn.lock
+    status:
+      - test -d node_modules || test -f .pnp.cjs
+    preconditions:
+      - sh: yarn --version
+        msg: "yarn not found"
+    cmds:
+      - yarn install
+
+  build:frontend:
+    label: build:frontend (DEV={{.DEV}} RUNNER={{.PACKAGE_MANAGER}})
+    summary: Build the frontend project
+    run: once
+    dir: dashboard
+    sources:
+      - "**/*"
+      - exclude: node_modules/**/*
+    generates:
+      - dist/**/*
+    deps:
+      - task: install:frontend:deps
+      - task: generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+          OBFUSCATED:
+            ref: .OBFUSCATED
+    cmds:
+      - task: frontend:run
+        vars:
+          SCRIPT: '{{if eq .DEV "true"}}build:dev{{else}}build{{end}}'
+    env:
+      PRODUCTION: '{{if eq .DEV "true"}}false{{else}}true{{end}}'
+
+  frontend:run:
+    summary: Run a frontend script with selected runner
+    cmds:
+      - task: frontend:run:{{.PACKAGE_MANAGER}}
+        vars:
+          SCRIPT: "{{.SCRIPT}}"
+    vars:
+      SCRIPT: "{{.SCRIPT}}"
+
+  frontend:run:npm:
+    dir: dashboard
+    cmds:
+      - npm run {{.SCRIPT}} -q
+    vars:
+      SCRIPT: "{{.SCRIPT}}"
+
+  frontend:run:yarn:
+    dir: dashboard
+    cmds:
+      - yarn {{.SCRIPT}}
+    vars:
+      SCRIPT: "{{.SCRIPT}}"
+
+  frontend:run:pnpm:
+    dir: dashboard
+    cmds:
+      - pnpm run {{.SCRIPT}}
+    vars:
+      SCRIPT: "{{.SCRIPT}}"
+
+  frontend:run:bun:
+    dir: dashboard
+    cmds:
+      - bun run {{.SCRIPT}}
+    vars:
+      SCRIPT: "{{.SCRIPT}}"
+
+  generate:bindings:
+    summary: Generates bindings for the frontend
+    run: once
+    deps:
+      - task: go:mod:tidy
+    sources:
+      - "**/*.[jt]s"
+      - exclude: dashboard/**/*
+      - dashboard/src/bindings/**/*
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - dashboard/src/bindings/**/*
+    cmds:
+      - wails3 generate bindings -f '{{.BUILD_FLAGS}}' -clean=true -d dashboard/src/bindings{{if eq .OBFUSCATED "true"}} -obfuscated{{end}}
+
+  generate:icons:
+    summary: Generates Windows `.ico` and macOS `.icns`
+    run: once
+    dir: build
+    sources:
+      - "appicon.png"
+    generates:
+      - "windows/icon.ico"
+      - "darwin/icons.icns"
+    cmds:
+      - wails3 generate icons -input appicon.png -windowsfilename windows/icon.ico -macfilename darwin/icons.icns
+
+  dev:frontend:
+    summary: Runs the frontend in development mode
+    deps:
+      - task: install:frontend:deps
+    cmds:
+      - task: frontend:dev:{{.PACKAGE_MANAGER}}
+
+  frontend:dev:npm:
+    dir: dashboard
+    cmds:
+      - npm run dev -- --port {{.VITE_PORT}} --strictPort
+
+  frontend:dev:yarn:
+    dir: dashboard
+    cmds:
+      - yarn dev --port {{.VITE_PORT}} --strictPort
+
+  frontend:dev:pnpm:
+    dir: dashboard
+    cmds:
+      - pnpm dev --port {{.VITE_PORT}} --strictPort
+
+  frontend:dev:bun:
+    dir: dashboard
+    cmds:
+      - bun run dev --port {{.VITE_PORT}} --strictPort
+
+  update:build-assets:
+    summary: Updates the build assets
+    dir: build
+    cmds:
+      - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .
+
+  build:server:
+    summary: Builds the application in server mode (no GUI, HTTP server only)
+    deps:
+      - task: build:frontend
+        vars:
+          DEV:
+            ref: .DEV
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+          OBFUSCATED:
+            ref: .OBFUSCATED
+    preconditions:
+      - sh: '{{if eq .OBFUSCATED "true"}}command -v garble >/dev/null 2>&1{{else}}true{{end}}'
+        msg: "garble is required for obfuscated builds."
+    cmds:
+      - '{{if eq .OBFUSCATED "true"}}garble {{.GARBLE_ARGS}} build{{else}}go build{{end}} {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}-server{{exeExt}}"'
+    vars:
+      BUILD_FLAGS: '-tags server{{if eq .DEV "true"}}{{if eq .OBFUSCATED "true"}},wails_obfuscated{{end}}{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -buildvcs=false -gcflags=all="-l"{{else}},production{{if eq .OBFUSCATED "true"}},wails_obfuscated{{end}}{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -trimpath -buildvcs=false -ldflags="-w -s"{{end}}'
+
+  run:server:
+    summary: Builds and runs a development server (DEV=true)
+    deps:
+      - task: build:server
+        vars:
+          DEV: "true"
+    cmds:
+      - '"./{{.BIN_DIR}}/{{.APP_NAME}}-server{{exeExt}}"'
+
+  setup:docker:
+    summary: Builds Docker image for cross-compilation (~800MB download)
+    cmds:
+      - docker build -t wails-cross -f build/docker/Dockerfile.cross build/docker/
+    preconditions:
+      - sh: docker info > /dev/null 2>&1
+        msg: "Docker is required. Please install Docker first."

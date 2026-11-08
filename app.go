@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"telegrampv/pkg/config"
 	"telegrampv/pkg/i18n"
@@ -20,7 +20,7 @@ import (
 )
 
 type App struct {
-	ctx       context.Context
+	win       *application.WebviewWindow
 	clientMgr *telegram.ClientManager
 	storage   *storage.Storage
 	updater   *updater.AppUpdater
@@ -90,9 +90,16 @@ func NewApp(assets fs.FS) (*App, error) {
 	return app, nil
 }
 
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
-	wailsRuntime.WindowSetTitle(ctx, fmt.Sprintf("TelegramPV v%s", config.AppVersion))
+func (a *App) setWindow(w *application.WebviewWindow) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.win = w
+}
+
+func (a *App) window() *application.WebviewWindow {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.win
 }
 
 func (a *App) shutdown(ctx context.Context) {

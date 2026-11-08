@@ -4,16 +4,14 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"telegrampv/pkg/config"
 	"telegrampv/pkg/i18n"
@@ -136,35 +134,48 @@ func runDesktopMode() {
 		os.Exit(1)
 	}
 
-	err = wails.Run(&options.App{
-		Title:             "TelegramPV",
-		Width:             1280,
-		Height:            720,
-		MinWidth:          950,
-		MinHeight:         680,
-		DisableResize:     false,
-		Fullscreen:        false,
-		Frameless:         false,
-		StartHidden:       false,
-		HideWindowOnClose: false,
-		BackgroundColour:  &options.RGBA{R: 18, G: 20, B: 22, A: 255},
-		AssetServer: &assetserver.Options{
-			Assets:  assets,
-			Handler: app.Handler(),
+	wailsApp := application.New(application.Options{
+		Name:        "TelegramPV",
+		Description: "Telegram Chat & Channel Manager Desktop",
+		Services: []application.Service{
+			application.NewService(app),
 		},
-		OnStartup:  app.startup,
-		OnShutdown: app.shutdown,
-		Bind: []interface{}{
-			app,
+		Assets: application.AssetOptions{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					if handler := app.Handler(); handler != nil {
+						handler.ServeHTTP(w, r)
+						return
+					}
+				}
+				application.AssetFileServerFS(assets).ServeHTTP(w, r)
+			}),
 		},
-		Windows: &windows.Options{
-			WebviewIsTransparent: false,
-			WindowIsTranslucent:  false,
-			DisableWindowIcon:    false,
+		Mac: application.MacOptions{
+			ActivationPolicy: application.ActivationPolicyRegular,
+		},
+		OnShutdown: func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			app.shutdown(ctx)
 		},
 	})
 
-	if err != nil {
-		fmt.Printf("Wails runtime error: %v\n", err)
+	win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            fmt.Sprintf("TelegramPV v%s", config.AppVersion),
+		Width:            1280,
+		Height:           720,
+		MinWidth:         950,
+		MinHeight:        680,
+		BackgroundColour: application.NewRGBA(18, 20, 22, 255),
+		Mac: application.MacWindow{
+			TitleBar: application.MacTitleBarHidden,
+		},
+	})
+
+	app.setWindow(win)
+
+	if err := wailsApp.Run(); err != nil {
+		println("Error:", err.Error())
 	}
 }

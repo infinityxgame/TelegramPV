@@ -28,6 +28,8 @@ telegrampv.sqlite3
 # IDEs and temporary files
 .idea/
 .vscode/
+.task/
+dashboard/src/bindings/
 *.swp
 *~
 .DS_Store

@@ -3,7 +3,9 @@ import { ref } from 'vue'
 const token = ref('')
 const ready = ref(false)
 
-export const isWailsRuntime = () => !!window.runtime
+export const isWailsRuntime = () =>
+  typeof window !== 'undefined' &&
+  (window.location.host.includes('wails') || !!window._wails)
 
 const STORAGE_KEY = 'telegrampv_api_token'
 
