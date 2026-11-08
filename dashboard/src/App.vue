@@ -31,6 +31,7 @@ const { modal, openConfirm, handleConfirm, handleCancel } = useConfirmModal()
 
 initTheme()
 
+const logoUrl = `${import.meta.env.BASE_URL}telegrampv-android-icon.png`
 const activeView = ref('all')
 const mobileMenuOpen = ref(false)
 const bootstrapping = ref(true)
@@ -368,9 +369,37 @@ onUnmounted(() => {
       <!-- Sidebar -->
       <aside class="sidebar" :class="{ 'mobile-open': mobileMenuOpen }">
         <div class="brand">
+          <span class="brand-mark"
+            ><img :src="logoUrl" alt="TelegramPV"
+          /></span>
           <div class="brand-text">
-            <span>Telegram<span class="brand-accent">PV</span></span>
-            <span class="version-tag">v{{ version || t('app.version') }}</span>
+            <svg viewBox="0 0 130 45" class="brand-svg">
+              <!-- Nombre de la App animado letra a letra -->
+              <text x="0" y="18" class="brand-logo-text">
+                <tspan class="b1">T</tspan>
+                <tspan class="b2">e</tspan>
+                <tspan class="b3">l</tspan>
+                <tspan class="b4">e</tspan>
+                <tspan class="b5">g</tspan>
+                <tspan class="b6">r</tspan>
+                <tspan class="b7">a</tspan>
+                <tspan class="b8">m</tspan>
+                <tspan class="brand-accent b9">P</tspan>
+                <tspan class="brand-accent b10">V</tspan>
+              </text>
+              <!-- Versión animada sincronizada con el texto de arriba -->
+              <text x="0" y="38" class="brand-version-text">
+                <tspan
+                  v-for="(char, i) in (
+                    'v' + (version || t('app.version'))
+                  ).split('')"
+                  :key="i"
+                  :class="'b' + (i + 1)"
+                >
+                  {{ char }}
+                </tspan>
+              </text>
+            </svg>
           </div>
           <button
             class="mobile-menu-toggle"

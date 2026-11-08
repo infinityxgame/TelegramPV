@@ -11,7 +11,7 @@ info:
   description: "Telegram Chat & Channel Manager Desktop" # The application description
   copyright: "Copyright 2026, TelegramPV" # Copyright text
   comments: "Telegram Chat & Channel Manager Desktop" # Comments
-  version: "1.0.2" # The application version
+  version: "1.0.3" # The application version
 
 # Dev mode configuration
 dev_mode:

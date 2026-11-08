@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	AppVersion = "1.0.2"
+	AppVersion = "1.0.3"
 	GithubRepo = "infinityxgame/TelegramPV"
 
 	DefaultBindHost = "127.0.0.1"
