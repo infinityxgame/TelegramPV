@@ -8,6 +8,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -82,6 +86,7 @@ func (s *Server) Start(host string, port int) (string, error) {
 	mux.HandleFunc("/api/chats/sync", s.handleSyncChats)
 	mux.HandleFunc("/api/chats/leave", s.handleLeaveChat)
 	mux.HandleFunc("/api/chats/export", s.handleExportChats)
+	mux.HandleFunc("/api/chats/open", s.handleOpenTelegram)
 
 	mux.HandleFunc("/api/settings", s.handleSettings)
 	mux.HandleFunc("/api/logs", s.handleLogs)
@@ -461,11 +466,6 @@ func (s *Server) handleLeaveChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleExportChats(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		jsonError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	category := r.URL.Query().Get("category")
 	if category == "" {
 		category = "all"
@@ -478,10 +478,79 @@ func (s *Server) handleExportChats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName := fmt.Sprintf("telegrampv_%s.txt", category)
+
+	// Guardar siempre el archivo en el directorio del programa
+	dir, err := os.Getwd()
+	if err != nil || dir == "" {
+		if execPath, err := os.Executable(); err == nil {
+			dir = filepath.Dir(execPath)
+		} else {
+			dir = "."
+		}
+	}
+
+	filePath := filepath.Join(dir, fileName)
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		log.Printf("[SERVER] Warning: Failed to write TXT export to %s: %v", filePath, err)
+	} else {
+		log.Printf("[SERVER] Saved TXT export to %s", filePath)
+	}
+
+	if r.Header.Get("Accept") == "application/json" || r.URL.Query().Get("format") == "json" {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success":  true,
+			"filename": fileName,
+			"path":     filePath,
+		})
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(content))
+}
+
+func (s *Server) handleOpenTelegram(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		jsonError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	var req struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.URL == "" {
+		jsonError(w, http.StatusBadRequest, "URL is required")
+		return
+	}
+
+	if !strings.HasPrefix(req.URL, "tg://") {
+		jsonError(w, http.StatusBadRequest, "Invalid Telegram URL")
+		return
+	}
+
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", req.URL)
+	case "darwin":
+		cmd = exec.Command("open", req.URL)
+	default:
+		cmd = exec.Command("xdg-open", req.URL)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Printf("[SERVER] Error opening Telegram URL: %v", err)
+		jsonError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+	})
 }
 
 func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {

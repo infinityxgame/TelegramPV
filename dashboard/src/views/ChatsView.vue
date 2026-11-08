@@ -122,8 +122,14 @@ const deleteSelectedBatch = async () => {
   }
 }
 
-const exportTXT = () => {
-  window.open(`/api/chats/export?category=${props.category}`, '_blank')
+const exportTXT = async () => {
+  try {
+    await fetch(`/api/chats/export?category=${props.category}&format=json`, {
+      headers: authHeaders()
+    })
+  } catch (err) {
+    console.error('Failed to export TXT:', err)
+  }
 }
 
 const toggleSelect = (id) => {

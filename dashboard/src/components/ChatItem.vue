@@ -1,4 +1,5 @@
 <script setup>
+import { useAuthToken } from '../composables/useAuthToken'
 import { useI18n } from '../i18n'
 import {
   Bot,
@@ -24,9 +25,10 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle-select', 'leave'])
 const { t } = useI18n()
+const { authHeaders } = useAuthToken()
 
-// Abrir el chat directamente en la aplicación de Telegram usando el protocolo tg://
-const openInTelegram = () => {
+// Abrir el chat directamente en la aplicación de Telegram usando el servidor para evitar ventanas emergentes
+const openInTelegram = async () => {
   if (!props.chat) return
   let url
   if (props.chat.username) {
@@ -43,7 +45,23 @@ const openInTelegram = () => {
       url = `tg://openmessage?user_id=${rawId}`
     }
   }
-  window.open(url, '_blank')
+
+  try {
+    const res = await fetch('/api/chats/open', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify({ url })
+    })
+    if (!res.ok) {
+      window.location.href = url
+    }
+  } catch (err) {
+    console.error('Failed to open Telegram:', err)
+    window.location.href = url
+  }
 }
 </script>
 
