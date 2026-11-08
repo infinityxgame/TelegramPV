@@ -124,80 +124,107 @@ html.theme-light select option {
   user-select: none;
 }
 .brand-svg {
-  width: 130px;
-  height: 45px;
+  width: 120px;
+  height: 40px;
   overflow: visible;
+  display: block;
 }
 .brand-logo-text {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 18px;
-  filter: drop-shadow(0 0 10px var(--user-glow, rgba(56, 167, 255, 0.4)));
-}
-.brand-logo-text tspan {
+  font-size: 19px;
   fill: #f3f8ff;
-  stroke: #f3f8ff;
-  stroke-width: 0.5px;
-  animation: brandLetterWave 3s ease-in-out infinite;
-}
-.brand-logo-text .brand-accent {
-  fill: var(--user-accent);
-  stroke: var(--user-accent);
 }
 .brand-version-text {
   font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
   font-size: 11px;
+  fill: var(--user-text-dim);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+.brand-logo-text .brand-accent {
+  fill: var(--user-accent);
+}
+.brand-logo-text tspan,
+.brand-version-text tspan {
+  opacity: 0;
+  fill-opacity: 0;
+  stroke: #f3f8ff;
+  stroke-width: 0.4;
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  display: inline-block;
+  animation: brandSweepWritingLoop 8s ease-in-out infinite;
 }
 .brand-version-text tspan {
-  fill: var(--user-text-dim);
   stroke: var(--user-text-dim);
-  stroke-width: 0.3px;
-  animation: brandLetterWave 3s ease-in-out infinite;
+  fill: var(--user-text-dim);
+}
+.brand-logo-text .brand-accent {
+  stroke: var(--user-accent);
 }
 
+/* Stagger compartido: la letra N del nombre y la letra N de la versión aparecen juntas */
 .b1 {
-  animation-delay: 0s;
+  animation-delay: 1s;
 }
 .b2 {
-  animation-delay: 0.12s;
+  animation-delay: 1.12s;
 }
 .b3 {
-  animation-delay: 0.24s;
+  animation-delay: 1.24s;
 }
 .b4 {
-  animation-delay: 0.36s;
+  animation-delay: 1.36s;
 }
 .b5 {
-  animation-delay: 0.48s;
+  animation-delay: 1.48s;
 }
 .b6 {
-  animation-delay: 0.6s;
+  animation-delay: 1.6s;
 }
 .b7 {
-  animation-delay: 0.72s;
+  animation-delay: 1.72s;
 }
 .b8 {
-  animation-delay: 0.84s;
+  animation-delay: 1.84s;
 }
 .b9 {
-  animation-delay: 0.96s;
+  animation-delay: 1.96s;
 }
 .b10 {
-  animation-delay: 1.08s;
+  animation-delay: 2.08s;
 }
 
-@keyframes brandLetterWave {
-  0%,
-  100% {
-    dy: 0px;
-    transform: translateY(0px);
-    fill-opacity: 1;
+@keyframes brandSweepWritingLoop {
+  0% {
+    opacity: 0;
+    fill-opacity: 0;
+    stroke-dashoffset: 80;
+    transform: translateX(-15px);
   }
-  50% {
-    dy: -4px;
-    transform: translateY(-4px);
-    fill-opacity: 0.7;
+  25% {
+    /* Entrada: se escribe y se llena mientras se desliza */
+    opacity: 1;
+    fill-opacity: 1;
+    stroke-dashoffset: 0;
+    transform: translateX(0);
+  }
+  75% {
+    /* Pausa: texto fijo y sólido */
+    opacity: 1;
+    fill-opacity: 1;
+    stroke-dashoffset: 0;
+    transform: translateX(0);
+  }
+  90% {
+    /* Salida: se desliza a la derecha y se desvanece */
+    opacity: 0;
+    fill-opacity: 0;
+    transform: translateX(15px);
+  }
+  100% {
+    opacity: 0;
   }
 }
 

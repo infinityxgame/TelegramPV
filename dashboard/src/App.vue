@@ -369,12 +369,12 @@ onUnmounted(() => {
       <!-- Sidebar -->
       <aside class="sidebar" :class="{ 'mobile-open': mobileMenuOpen }">
         <div class="brand">
-          <span class="brand-mark">
-            <img :src="logoUrl" alt="TelegramPV" />
-          </span>
+          <span class="brand-mark"
+            ><img :src="logoUrl" alt="TelegramPV"
+          /></span>
           <div class="brand-text">
             <svg viewBox="0 0 130 45" class="brand-svg">
-              <!-- Nombre de la App animado letra a letra estilo loader (writeAndFill) -->
+              <!-- Nombre de la App animado letra a letra -->
               <text x="0" y="18" class="brand-logo-text">
                 <tspan class="b1">T</tspan>
                 <tspan class="b2">e</tspan>
@@ -387,7 +387,7 @@ onUnmounted(() => {
                 <tspan class="brand-accent b9">P</tspan>
                 <tspan class="brand-accent b10">V</tspan>
               </text>
-              <!-- Versión animada letra a letra estilo loader -->
+              <!-- Versión animada sincronizada con el texto de arriba -->
               <text x="0" y="38" class="brand-version-text">
                 <tspan
                   v-for="(char, i) in (
@@ -544,6 +544,112 @@ onUnmounted(() => {
 </template>
 
 <style>
+/* Animación del Logo en el Sidebar */
+.brand-svg {
+  width: 120px;
+  height: 40px;
+  overflow: visible;
+  display: block;
+}
+.brand-logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  fill: #f3f8ff;
+}
+.brand-version-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  fill: var(--user-text-dim);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+.brand-logo-text .brand-accent {
+  fill: var(--user-accent);
+}
+.brand-logo-text tspan,
+.brand-version-text tspan {
+  opacity: 0;
+  fill-opacity: 0;
+  stroke: #f3f8ff;
+  stroke-width: 0.4;
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  display: inline-block;
+  animation: brandSweepWritingLoop 8s ease-in-out infinite;
+}
+.brand-version-text tspan {
+  stroke: var(--user-text-dim);
+  fill: var(--user-text-dim);
+}
+.brand-logo-text .brand-accent {
+  stroke: var(--user-accent);
+}
+
+/* Stagger compartido: la letra N del nombre y la letra N de la versión aparecen juntas */
+.b1 {
+  animation-delay: 1s;
+}
+.b2 {
+  animation-delay: 1.12s;
+}
+.b3 {
+  animation-delay: 1.24s;
+}
+.b4 {
+  animation-delay: 1.36s;
+}
+.b5 {
+  animation-delay: 1.48s;
+}
+.b6 {
+  animation-delay: 1.6s;
+}
+.b7 {
+  animation-delay: 1.72s;
+}
+.b8 {
+  animation-delay: 1.84s;
+}
+.b9 {
+  animation-delay: 1.96s;
+}
+.b10 {
+  animation-delay: 2.08s;
+}
+
+@keyframes brandSweepWritingLoop {
+  0% {
+    opacity: 0;
+    fill-opacity: 0;
+    stroke-dashoffset: 80;
+    transform: translateX(-15px);
+  }
+  25% {
+    /* Entrada: se escribe y se llena mientras se desliza */
+    opacity: 1;
+    fill-opacity: 1;
+    stroke-dashoffset: 0;
+    transform: translateX(0);
+  }
+  75% {
+    /* Pausa: texto fijo y sólido */
+    opacity: 1;
+    fill-opacity: 1;
+    stroke-dashoffset: 0;
+    transform: translateX(0);
+  }
+  90% {
+    /* Salida: se desliza a la derecha y se desvanece */
+    opacity: 0;
+    fill-opacity: 0;
+    transform: translateX(15px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @font-face {
   font-family: 'LoaderFont';
   src: url('/fonts/loader.otf') format('opentype');
