@@ -24,8 +24,8 @@ const emit = defineEmits([
 
 const { t, locale, setLocale } = useI18n()
 
-// 'themes' abierto por defecto al entrar en Ajustes
-const openSection = ref('themes')
+// Todos los acordeones colapsados por defecto al entrar en Ajustes
+const openSection = ref('')
 
 const patch = (partial) => {
   emit('update:settings', partial)

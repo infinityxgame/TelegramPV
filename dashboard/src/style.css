@@ -33,6 +33,8 @@ body {
   );
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
 }
 html {
   scroll-behavior: smooth;
@@ -1710,23 +1712,26 @@ footer {
   -webkit-user-drag: none;
 }
 
-/* Excepciones: lo que existe precisamente para ser leído con calma o copiado.
-   Los campos de formulario son obvios; el registro, las rutas de archivo, el
-   token y los mensajes de error se copian a menudo para pegarlos en otro sitio
-   o buscarlos. Para cualquier texto nuevo que deba poder copiarse basta con
-   añadirle la clase .seleccionable. */
-.app-nativo input,
-.app-nativo textarea,
-.app-nativo select,
-.app-nativo [contenteditable='true'],
-.app-nativo code,
-.app-nativo pre,
-.app-nativo .seleccionable,
-.app-nativo .log-message,
-.app-nativo .log-detail,
-.app-nativo .log-path,
-.app-nativo .logs-error,
-.app-nativo .auth-alert {
+/* Excepciones: únicamente los elementos del registro de logs y campos de entrada son seleccionables */
+input,
+textarea,
+select,
+[contenteditable='true'],
+code,
+pre,
+.seleccionable,
+.logs-list,
+.logs-list *,
+.logs-console,
+.logs-console *,
+.log-row,
+.log-message,
+.log-detail,
+.log-time,
+.log-category,
+.log-level,
+.log-path,
+.logs-error {
   -webkit-user-select: text;
   user-select: text;
   cursor: auto;
