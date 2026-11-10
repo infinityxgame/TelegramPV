@@ -36,14 +36,14 @@ const openInTelegram = async () => {
   } else {
     const rawId = String(props.chat.id)
     if (props.chat.type === 'channel' || rawId.startsWith('-100')) {
-      const cleanId = rawId.replace('-100', '')
-      url = `tg://openmessage?chat_id=${cleanId}`
+      const cleanId = rawId.replace('-100', '').replace('-', '')
+      url = `tg://privatepost?channel=${cleanId}`
     } else if (props.chat.type === 'group' || rawId.startsWith('-')) {
       const cleanId = rawId.replace('-', '')
       url = `tg://openmessage?chat_id=${cleanId}`
     } else {
       // Para usuarios, bots y cuentas eliminadas (PeerUser)
-      url = `tg://openmessage?user_id=${rawId}`
+      url = `tg://user?id=${rawId}`
     }
   }
 

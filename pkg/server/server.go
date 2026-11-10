@@ -558,7 +558,7 @@ func (s *Server) handleOpenTelegram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !strings.HasPrefix(req.URL, "tg://") {
+	if !strings.HasPrefix(req.URL, "tg://") && !strings.HasPrefix(req.URL, "https://t.me/") {
 		jsonError(w, http.StatusBadRequest, "Invalid Telegram URL")
 		return
 	}
