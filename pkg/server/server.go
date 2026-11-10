@@ -92,6 +92,8 @@ func (s *Server) Start(host string, port int) (string, error) {
 
 	mux.HandleFunc("/api/settings", s.handleSettings)
 	mux.HandleFunc("/api/logs", s.handleLogs)
+	mux.HandleFunc("/api/logs/clear", s.handleLogsClear)
+	mux.HandleFunc("/api/logs/export", s.handleLogsExport)
 
 	// Updates (singular /update/ y plural /updates/)
 	mux.HandleFunc("/api/update/check", s.handleCheckUpdate)
@@ -412,12 +414,15 @@ func (s *Server) handleSyncChats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logbus.Info(logbus.CatChats, i18n.T("chats.syncStarted"))
 	chats, err := s.clientMgr.FetchDialogsAndSave(r.Context(), s.storage)
 	if err != nil {
+		logbus.Error(logbus.CatChats, fmt.Sprintf(i18n.T("telegram.fetchDialogsError"), err))
 		jsonError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	logbus.Success(logbus.CatChats, fmt.Sprintf(i18n.T("chats.synced"), len(chats)))
 	counts, _ := s.storage.GetChatCounts()
 
 	jsonResponse(w, http.StatusOK, map[string]interface{}{
@@ -444,6 +449,15 @@ func (s *Server) handleLeaveChat(w http.ResponseWriter, r *http.Request) {
 
 	if len(req.ChatIDs) > 0 {
 		results := s.clientMgr.LeaveOrDeleteChatsBatch(r.Context(), s.storage, req.ChatIDs)
+		successCount := 0
+		for _, err := range results {
+			if err == nil {
+				successCount++
+			}
+		}
+		if successCount > 0 {
+			logbus.Warn(logbus.CatChats, fmt.Sprintf(i18n.T("chats.batchRemoved"), successCount))
+		}
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"success": true,
 			"results": results,
@@ -456,11 +470,27 @@ func (s *Server) handleLeaveChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	chats, _ := s.storage.GetChats("everything", strconv.FormatInt(req.ChatID, 10))
+	var chatTitle string
+	for _, c := range chats {
+		if c.ID == req.ChatID {
+			chatTitle = c.Title
+			break
+		}
+	}
+	if chatTitle == "" {
+		chatTitle = strconv.FormatInt(req.ChatID, 10)
+	} else {
+		chatTitle = fmt.Sprintf("%s (%d)", chatTitle, req.ChatID)
+	}
+
 	if err := s.clientMgr.LeaveOrDeleteChat(r.Context(), s.storage, req.ChatID); err != nil {
+		logbus.Error(logbus.CatChats, fmt.Sprintf(i18n.T("telegram.leaveChannelError"), err), chatTitle)
 		jsonError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	logbus.Warn(logbus.CatChats, fmt.Sprintf(i18n.T("chats.removed"), chatTitle))
 	jsonResponse(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"chat_id": req.ChatID,
@@ -581,34 +611,20 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		before, _ := s.storage.LoadConfig(config.DefaultConfig())
+
 		if cfg.Language != "" {
 			i18n.SetLanguage(cfg.Language)
 		}
 		_ = s.storage.SaveConfig(cfg)
+		logConfigChanges(before, cfg)
+
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"success": true,
 		})
 	default:
 		jsonError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
-}
-
-func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		jsonError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var sinceID int64
-	if sinceStr := r.URL.Query().Get("since"); sinceStr != "" {
-		sinceID, _ = strconv.ParseInt(sinceStr, 10, 64)
-	}
-
-	entries, lastID := logbus.GetEntries(sinceID)
-	jsonResponse(w, http.StatusOK, map[string]interface{}{
-		"logs":    entries,
-		"last_id": lastID,
-	})
 }
 
 // Handlers del actualizador

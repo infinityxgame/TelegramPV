@@ -50,6 +50,15 @@ export function t(key, ...args) {
   return str
 }
 
+export function has(key) {
+  const localeDict = messages[currentLocale.value] || messages.es
+  const val =
+    getNestedValue(localeDict, key) ??
+    getNestedValue(messages.es, key) ??
+    getNestedValue(messages.en, key)
+  return val !== undefined
+}
+
 const SPLIT_MARK = '0000'
 export function splitOn(key, mark, params = {}) {
   const parts = t(key, { ...params, [mark]: SPLIT_MARK }).split(SPLIT_MARK)
@@ -65,6 +74,7 @@ export function useI18n() {
 
   return {
     t,
+    has,
     splitOn,
     locale: currentLocale,
     setLocale

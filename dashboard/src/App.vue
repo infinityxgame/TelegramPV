@@ -541,7 +541,7 @@ onUnmounted(() => {
             <h1 v-else-if="activeView === 'settings'">
               {{ t('settings.title') }}
             </h1>
-            <h1 v-else-if="activeView === 'logs'">{{ t('logs.title') }}</h1>
+            <h1 v-else-if="activeView === 'logs'">{{ t('nav.logs') }}</h1>
           </div>
         </div>
 
@@ -562,7 +562,11 @@ onUnmounted(() => {
           @reset-loader-color="resetLoaderColor"
         />
 
-        <LogsView v-else-if="activeView === 'logs'" />
+        <LogsView
+          v-else-if="activeView === 'logs'"
+          :active="activeView === 'logs'"
+          :notify="showMessage"
+        />
       </main>
 
       <!-- Global Confirm Modal -->

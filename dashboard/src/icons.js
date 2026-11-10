@@ -53,5 +53,9 @@ export {
   ExternalLink,
   ChevronRight,
   Settings2,
+  ArrowDownToLine,
+  Copy,
+  Pause,
+  Play,
   FileText as ScrollText
 } from 'lucide-vue-next'
