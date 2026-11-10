@@ -4448,44 +4448,63 @@ html.theme-udyat .update-required-overlay {
   box-shadow: 0 4px 14px rgba(155, 98, 240, 0.45) !important;
 }
 
-/* 2. Edge Runner UI: texto negro (#000000) sobre fondo amarillo neón */
-.theme-edge-runner .filter-pill.active,
-.theme-edge-runner .filter-switch-label.active,
-.theme-edge-runner .filter-switch-label.active span {
+/* 2. Edge Runner UI: píldora activa con texto negro, switches con texto blanco */
+.theme-edge-runner .filter-pill.active {
   color: #000000 !important;
   font-weight: 700 !important;
+}
+.theme-edge-runner .filter-switch-label.active,
+.theme-edge-runner .filter-switch-label.active > span {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.theme-edge-runner .filter-switch-label.active .switch span {
+  background: var(--user-primary, #e0ff00) !important;
+  border-color: transparent !important;
 }
 .theme-edge-runner .filter-switch-label.active .switch span:after {
   background: #000000 !important;
 }
 
-/* 3. Rainy Garden: texto verde oscuro/negro (#0d1a0d) sobre píldora activa */
-.theme-rainy-garden .filter-pill.active,
-.theme-rainy-garden .filter-switch-label.active,
-.theme-rainy-garden .filter-switch-label.active span {
+/* 3. Rainy Garden: píldora activa con texto oscuro, switches con texto blanco */
+.theme-rainy-garden .filter-pill.active {
   color: #0d1a0d !important;
   font-weight: 700 !important;
 }
+.theme-rainy-garden .filter-switch-label.active,
+.theme-rainy-garden .filter-switch-label.active > span {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.theme-rainy-garden .filter-switch-label.active .switch span {
+  background: var(--user-primary, #e6ecef) !important;
+  border-color: transparent !important;
+}
 .theme-rainy-garden .filter-switch-label.active .switch span:after {
-  background: #0d1a0d !important;
+  background: var(--rg-moss-deep, #1e4620) !important;
 }
 
-/* 4. Herbal Apothecary: texto verde oscuro/negro (#09180d) sobre píldora activa */
-html.theme-herbal-apothecary .filter-pill.active,
-html.theme-herbal-apothecary .filter-switch-label.active,
-html.theme-herbal-apothecary .filter-switch-label.active span {
+/* 4. Herbal Apothecary: píldora activa con texto oscuro, switches con texto blanco */
+html.theme-herbal-apothecary .filter-pill.active {
   color: #09180d !important;
   font-weight: 700 !important;
 }
+html.theme-herbal-apothecary .filter-switch-label.active,
+html.theme-herbal-apothecary .filter-switch-label.active > span {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+html.theme-herbal-apothecary .filter-switch-label.active .switch span {
+  background: var(--user-primary, #7fb069) !important;
+  border-color: transparent !important;
+}
 html.theme-herbal-apothecary .filter-switch-label.active .switch span:after {
-  background: #09180d !important;
+  background: var(--user-bg-base, #141f18) !important;
 }
 
-/* 5. Silent Cherry y temas claros (Light, OSX, Darling Red) - Solución completa a contraste y botones */
+/* 5. Silent Cherry y temas claros (Light) - Solución completa a contraste y botones */
 html.theme-silent-cherry,
-html.theme-light,
-html.theme-osx,
-html.theme-darling-red {
+html.theme-light {
   --user-text-main: #2e1e2b;
 }
 
@@ -4510,9 +4529,7 @@ html.theme-silent-cherry .selected-count {
 }
 
 html.theme-silent-cherry .sort-select,
-html.theme-light .sort-select,
-html.theme-osx .sort-select,
-html.theme-darling-red .sort-select {
+html.theme-light .sort-select {
   background-color: color-mix(
     in srgb,
     var(--user-surface),
@@ -4524,24 +4541,18 @@ html.theme-darling-red .sort-select {
 }
 
 html.theme-silent-cherry .sort-select option,
-html.theme-light .sort-select option,
-html.theme-osx .sort-select option,
-html.theme-darling-red .sort-select option {
+html.theme-light .sort-select option {
   background-color: #ffffff !important;
   color: #2e1e2b !important;
 }
 
 html.theme-silent-cherry .chat-title,
-html.theme-light .chat-title,
-html.theme-osx .chat-title,
-html.theme-darling-red .chat-title {
+html.theme-light .chat-title {
   color: #2e1e2b !important;
 }
 
 html.theme-silent-cherry .chat-username,
-html.theme-light .chat-username,
-html.theme-osx .chat-username,
-html.theme-darling-red .chat-username {
+html.theme-light .chat-username {
   color: #b03a56 !important;
 }
 
@@ -4650,9 +4661,7 @@ html.theme-silent-cherry .filter-switch-label.active .switch span:after {
 }
 
 html.theme-silent-cherry .role-badge.creator,
-html.theme-light .role-badge.creator,
-html.theme-osx .role-badge.creator,
-html.theme-darling-red .role-badge.creator {
+html.theme-light .role-badge.creator {
   background: #fef3c7 !important;
   color: #b45309 !important;
   border-color: #f59e0b !important;
@@ -4660,11 +4669,39 @@ html.theme-darling-red .role-badge.creator {
 }
 
 html.theme-silent-cherry .role-badge.admin,
-html.theme-light .role-badge.admin,
-html.theme-osx .role-badge.admin,
-html.theme-darling-red .role-badge.admin {
+html.theme-light .role-badge.admin {
   background: #e0f2fe !important;
   color: #0369a1 !important;
   border-color: #38bdf8 !important;
+  font-weight: 700 !important;
+}
+
+/* 6. Darling Red: correcciones de visibilidad para nombres de chat y etiquetas de rol */
+html.theme-darling-red .chat-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+html.theme-darling-red .chat-username {
+  color: var(--dr-pink, #f48fb1) !important;
+}
+
+html.theme-darling-red .chat-id-badge,
+html.theme-darling-red .chat-type-label {
+  color: var(--dr-pink-suave, #f8bbd0) !important;
+  opacity: 0.85;
+}
+
+html.theme-darling-red .role-badge.creator {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fde047 !important;
+  border: 1px solid rgba(245, 158, 11, 0.6) !important;
+  font-weight: 700 !important;
+}
+
+html.theme-darling-red .role-badge.admin {
+  background: rgba(0, 229, 255, 0.22) !important;
+  color: #18ffff !important;
+  border: 1px solid rgba(0, 229, 255, 0.6) !important;
   font-weight: 700 !important;
 }
