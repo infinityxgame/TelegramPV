@@ -136,6 +136,13 @@ export default {
     filterAll: 'All',
     filterPublic: 'Public',
     filterPrivate: 'Private',
+    filterRoleAll: 'All roles',
+    filterRoleAdmin: 'Administrator',
+    filterRoleOwner: 'My Properties',
+    filterBotsAll: 'All bots',
+    filterBotsOwner: 'My Ownership',
+    roleOwner: 'Owner',
+    roleAdmin: 'Admin',
     resultsCount: 'results'
   },
   settings: {

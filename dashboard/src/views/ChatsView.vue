@@ -33,6 +33,7 @@ const counts = ref({ all: 0, groups: 0, channels: 0, bots: 0, users: 0 })
 const searchQuery = ref('')
 const sortOrder = ref('az')
 const privacyFilter = ref('all')
+const roleFilter = ref('all')
 const loading = ref(false)
 const syncing = ref(false)
 const selectedIDs = ref(new Set())
@@ -173,6 +174,13 @@ const displayedChats = computed(() => {
     }
   }
 
+  // Filtro Combinado de Rol y Propiedad
+  if (roleFilter.value === 'creator') {
+    list = list.filter((c) => Boolean(c.is_creator))
+  } else if (roleFilter.value === 'admin') {
+    list = list.filter((c) => Boolean(c.is_admin || c.is_creator))
+  }
+
   // Ordenamiento alfabético A-Z / Z-A
   if (sortOrder.value === 'az') {
     list.sort((a, b) =>
@@ -215,6 +223,7 @@ watch(
   () => props.category,
   () => {
     privacyFilter.value = 'all'
+    roleFilter.value = 'all'
     selectedIDs.value.clear()
     fetchChats()
   }
@@ -294,7 +303,67 @@ onMounted(fetchChats)
         >
           {{ t('chats.filterPrivate') }}
         </button>
+      </div>
 
+      <!-- Filtros de Rol y Propiedad para Grupos y Canales -->
+      <div
+        v-if="['all', 'groups', 'channels'].includes(category)"
+        class="privacy-filters"
+      >
+        <button
+          class="filter-pill"
+          :class="{ active: roleFilter === 'all' }"
+          @click="roleFilter = 'all'"
+        >
+          {{ t('chats.filterRoleAll') }}
+        </button>
+        <button
+          class="filter-pill"
+          :class="{ active: roleFilter === 'creator' }"
+          @click="roleFilter = 'creator'"
+        >
+          {{ t('chats.filterRoleOwner') }}
+        </button>
+        <button
+          class="filter-pill"
+          :class="{ active: roleFilter === 'admin' }"
+          @click="roleFilter = 'admin'"
+        >
+          {{ t('chats.filterRoleAdmin') }}
+        </button>
+
+        <span class="results-count">
+          {{ displayedChats.length }} {{ t('chats.resultsCount') }}
+        </span>
+      </div>
+
+      <!-- Filtro de Propiedad para Bots -->
+      <div v-else-if="category === 'bots'" class="privacy-filters">
+        <button
+          class="filter-pill"
+          :class="{ active: roleFilter === 'all' }"
+          @click="roleFilter = 'all'"
+        >
+          {{ t('chats.filterBotsAll') }}
+        </button>
+        <button
+          class="filter-pill"
+          :class="{ active: roleFilter === 'creator' }"
+          @click="roleFilter = 'creator'"
+        >
+          {{ t('chats.filterBotsOwner') }}
+        </button>
+
+        <span class="results-count">
+          {{ displayedChats.length }} {{ t('chats.resultsCount') }}
+        </span>
+      </div>
+
+      <!-- Fallback contador -->
+      <div
+        v-else-if="!['all', 'groups', 'channels', 'bots'].includes(category)"
+        class="privacy-filters"
+      >
         <span class="results-count">
           {{ displayedChats.length }} {{ t('chats.resultsCount') }}
         </span>

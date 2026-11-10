@@ -582,6 +582,8 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 						chatItem.Title = ch.Title
 						chatItem.Username = ch.Username
 						chatItem.AccessHash = ch.AccessHash
+						chatItem.IsCreator = ch.Creator
+						chatItem.IsAdmin = ch.Creator || ch.AdminRights.Flags != 0
 
 						if ch.Broadcast {
 							chatItem.Type = "channel"
@@ -601,6 +603,8 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 						chatItem.ID = canonicID
 						chatItem.Title = ch.Title
 						chatItem.Type = "group"
+						chatItem.IsCreator = ch.Creator
+						chatItem.IsAdmin = ch.Creator || ch.AdminRights.Flags != 0
 						allChats = append(allChats, chatItem)
 					}
 				case *tg.PeerUser:
@@ -621,6 +625,8 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 
 						if usr.Bot {
 							chatItem.Type = "bot"
+							chatItem.IsCreator = usr.BotCanEdit
+							chatItem.IsAdmin = usr.BotCanEdit
 						} else {
 							chatItem.Type = "user"
 						}

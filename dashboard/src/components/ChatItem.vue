@@ -90,6 +90,12 @@ const openInTelegram = async () => {
       <div class="chat-meta">
         <span class="chat-id-badge">{{ chat.id }}</span>
         <span class="chat-type-label">{{ t(`chats.${chat.type}`) }}</span>
+        <span v-if="chat.is_creator" class="role-badge creator">{{
+          t('chats.roleOwner')
+        }}</span>
+        <span v-else-if="chat.is_admin" class="role-badge admin">{{
+          t('chats.roleAdmin')
+        }}</span>
       </div>
     </div>
 
@@ -227,6 +233,27 @@ const openInTelegram = async () => {
 .chat-type-label {
   color: var(--user-text-dim, #728ba2);
   text-transform: capitalize;
+}
+
+.role-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.creator {
+  background: rgba(255, 199, 100, 0.15);
+  color: #ffc764;
+  border: 1px solid rgba(255, 199, 100, 0.35);
+}
+
+.role-badge.admin {
+  background: rgba(56, 167, 255, 0.15);
+  color: #5ebcff;
+  border: 1px solid rgba(56, 167, 255, 0.35);
 }
 
 .chat-actions {

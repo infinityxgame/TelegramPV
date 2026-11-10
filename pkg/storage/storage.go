@@ -23,6 +23,8 @@ type Chat struct {
 	UnreadCount  int    `json:"unread_count"`
 	MembersCount int    `json:"members_count"`
 	AccessHash   int64  `json:"access_hash"`
+	IsCreator    bool   `json:"is_creator"`
+	IsAdmin      bool   `json:"is_admin"`
 	UpdatedAt    int64  `json:"updated_at"`
 }
 
@@ -85,6 +87,8 @@ func (s *Storage) initSchema() error {
 			unread_count INTEGER DEFAULT 0,
 			members_count INTEGER DEFAULT 0,
 			access_hash INTEGER DEFAULT 0,
+			is_creator INTEGER DEFAULT 0,
+			is_admin INTEGER DEFAULT 0,
 			updated_at INTEGER DEFAULT 0
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_chats_type ON chats(type);`,
@@ -96,6 +100,10 @@ func (s *Storage) initSchema() error {
 			return err
 		}
 	}
+
+	// Migraciones defensivas para añadir columnas si la tabla de chats ya existía previamente
+	_, _ = s.db.Exec("ALTER TABLE chats ADD COLUMN is_creator INTEGER DEFAULT 0;")
+	_, _ = s.db.Exec("ALTER TABLE chats ADD COLUMN is_admin INTEGER DEFAULT 0;")
 
 	return nil
 }
@@ -181,8 +189,8 @@ func (s *Storage) SaveChats(chats []Chat) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare(`INSERT INTO chats (id, type, title, username, unread_count, members_count, access_hash, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	stmt, err := tx.Prepare(`INSERT INTO chats (id, type, title, username, unread_count, members_count, access_hash, is_creator, is_admin, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			type = excluded.type,
 			title = excluded.title,
@@ -190,6 +198,8 @@ func (s *Storage) SaveChats(chats []Chat) error {
 			unread_count = excluded.unread_count,
 			members_count = excluded.members_count,
 			access_hash = excluded.access_hash,
+			is_creator = excluded.is_creator,
+			is_admin = excluded.is_admin,
 			updated_at = excluded.updated_at`)
 	if err != nil {
 		return err
@@ -202,7 +212,15 @@ func (s *Storage) SaveChats(chats []Chat) error {
 		if updatedAt == 0 {
 			updatedAt = now
 		}
-		_, err := stmt.Exec(c.ID, c.Type, c.Title, c.Username, c.UnreadCount, c.MembersCount, c.AccessHash, updatedAt)
+		isCreatorInt := 0
+		if c.IsCreator {
+			isCreatorInt = 1
+		}
+		isAdminInt := 0
+		if c.IsAdmin {
+			isAdminInt = 1
+		}
+		_, err := stmt.Exec(c.ID, c.Type, c.Title, c.Username, c.UnreadCount, c.MembersCount, c.AccessHash, isCreatorInt, isAdminInt, updatedAt)
 		if err != nil {
 			return err
 		}
@@ -218,13 +236,12 @@ func (s *Storage) GetChats(category string, search string) ([]Chat, error) {
 	var query string
 	var args []interface{}
 
-	baseQuery := "SELECT id, type, title, username, unread_count, members_count, access_hash, updated_at FROM chats"
+	baseQuery := "SELECT id, type, title, username, unread_count, members_count, access_hash, is_creator, is_admin, updated_at FROM chats"
 	var whereConditions []string
 
 	category = strings.ToLower(strings.TrimSpace(category))
 	switch category {
 	case "all":
-		// Grupos y Canales juntos
 		whereConditions = append(whereConditions, "type IN ('group', 'channel')")
 	case "groups":
 		whereConditions = append(whereConditions, "type = 'group'")
@@ -264,9 +281,12 @@ func (s *Storage) GetChats(category string, search string) ([]Chat, error) {
 	var chats []Chat
 	for rows.Next() {
 		var c Chat
-		if err := rows.Scan(&c.ID, &c.Type, &c.Title, &c.Username, &c.UnreadCount, &c.MembersCount, &c.AccessHash, &c.UpdatedAt); err != nil {
+		var isCreatorInt, isAdminInt int
+		if err := rows.Scan(&c.ID, &c.Type, &c.Title, &c.Username, &c.UnreadCount, &c.MembersCount, &c.AccessHash, &isCreatorInt, &isAdminInt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
+		c.IsCreator = isCreatorInt != 0
+		c.IsAdmin = isAdminInt != 0
 		c.UnreadCount = 0
 		c.MembersCount = 0
 		if strings.TrimSpace(c.Title) == "" {
