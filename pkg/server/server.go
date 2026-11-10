@@ -9,15 +9,11 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
-	"unsafe"
 
 	"telegrampv/pkg/config"
 	"telegrampv/pkg/i18n"
@@ -563,30 +559,7 @@ func (s *Server) handleOpenTelegram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var err error
-	switch runtime.GOOS {
-	case "windows":
-		// Usar la API nativa ShellExecuteW para ejecutar el protocolo tg:// directamente sin abrir consola CMD ni navegador
-		shell32 := syscall.NewLazyDLL("shell32.dll")
-		shellExecute := shell32.NewProc("ShellExecuteW")
-		var verbPtr, urlPtr *uint16
-		verbPtr, err = syscall.UTF16PtrFromString("open")
-		if err == nil {
-			urlPtr, err = syscall.UTF16PtrFromString(req.URL)
-		}
-		if err == nil {
-			// 1 = SW_SHOWNORMAL
-			ret, _, _ := shellExecute.Call(0, uintptr(unsafe.Pointer(verbPtr)), uintptr(unsafe.Pointer(urlPtr)), 0, 0, 1)
-			if ret <= 32 {
-				err = fmt.Errorf("ShellExecuteW error code %d", ret)
-			}
-		}
-	case "darwin":
-		err = exec.Command("open", req.URL).Start()
-	default:
-		err = exec.Command("xdg-open", req.URL).Start()
-	}
-
+	err := openURL(req.URL)
 	if err != nil {
 		log.Printf("[SERVER] Error opening Telegram URL: %v", err)
 		jsonError(w, http.StatusInternalServerError, fmt.Sprintf("%v", err))
