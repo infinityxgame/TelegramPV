@@ -300,20 +300,8 @@ onMounted(fetchChats)
         </span>
       </div>
 
-      <!-- Selección múltiple movida a la derecha -->
+      <!-- Selección múltiple fijada a la derecha con acciones a la izquierda -->
       <div class="selection-controls">
-        <button
-          v-if="displayedChats.length > 0"
-          class="btn-select-all"
-          @click="toggleSelectAll"
-        >
-          <CheckSquare v-if="allSelected" :size="16" />
-          <Square v-else :size="16" />
-          <span>{{
-            allSelected ? t('chats.deselectAll') : t('chats.selectAll')
-          }}</span>
-        </button>
-
         <span v-if="selectedIDs.size > 0" class="selected-count">
           {{ selectedIDs.size }} / {{ displayedChats.length }}
         </span>
@@ -325,6 +313,18 @@ onMounted(fetchChats)
         >
           <Trash2 :size="16" />
           <span>{{ t('chats.deleteSelected', selectedIDs.size) }}</span>
+        </button>
+
+        <button
+          v-if="displayedChats.length > 0"
+          class="btn-select-all"
+          @click="toggleSelectAll"
+        >
+          <CheckSquare v-if="allSelected" :size="16" />
+          <Square v-else :size="16" />
+          <span>{{
+            allSelected ? t('chats.deselectAll') : t('chats.selectAll')
+          }}</span>
         </button>
       </div>
     </div>

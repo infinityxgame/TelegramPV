@@ -426,16 +426,6 @@
 .theme-twilight-comet .sidebar-nav button.selected::before {
   background-color: var(--tc-ribbon);
 }
-.theme-twilight-comet .sidebar-nav button.selected::after {
-  content: '';
-  position: absolute;
-  right: 10px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--tc-ribbon-light);
-  box-shadow: 0 0 8px var(--tc-ribbon);
-}
 
 /* Los enlaces de ayuda ya eran de un rojo fijo: se alinean con el cordón. */
 .theme-twilight-comet .inline-link,
@@ -547,9 +537,6 @@
   }
   .theme-twilight-comet .sidebar-nav button.selected {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  }
-  .theme-twilight-comet .sidebar-nav button.selected::after {
-    display: none;
   }
   .theme-twilight-comet body::before {
     opacity: 0.35;
