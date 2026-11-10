@@ -91,6 +91,36 @@ const authStatus = ref({
   user: null
 })
 
+const chatCounts = reactive({
+  all: 0,
+  groups: 0,
+  channels: 0,
+  bots: 0,
+  users: 0
+})
+
+const updateCounts = (newCounts) => {
+  if (newCounts && typeof newCounts === 'object') {
+    Object.assign(chatCounts, newCounts)
+  }
+}
+
+const fetchChatCounts = async () => {
+  try {
+    const res = await fetch('/api/chats?category=all', {
+      headers: authHeaders()
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.counts) {
+        updateCounts(data.counts)
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch chat counts:', err)
+  }
+}
+
 const settings = reactive({
   color_id: 5,
   loader_color_id: 5,
@@ -243,6 +273,7 @@ onMounted(async () => {
   const startBoot = Date.now()
   await checkAuthStatus()
   await loadSettings()
+  await fetchChatCounts()
   await checkForUpdates(true)
 
   const elapsed = Date.now() - startBoot
@@ -419,6 +450,7 @@ onUnmounted(() => {
           >
             <Layers :size="18" />
             <span>{{ t('nav.allChats') }}</span>
+            <span class="nav-badge">{{ chatCounts.all || 0 }}</span>
           </button>
 
           <button
@@ -427,6 +459,7 @@ onUnmounted(() => {
           >
             <Users :size="18" />
             <span>{{ t('nav.groups') }}</span>
+            <span class="nav-badge">{{ chatCounts.groups || 0 }}</span>
           </button>
 
           <button
@@ -435,6 +468,7 @@ onUnmounted(() => {
           >
             <Radio :size="18" />
             <span>{{ t('nav.channels') }}</span>
+            <span class="nav-badge">{{ chatCounts.channels || 0 }}</span>
           </button>
 
           <button
@@ -443,6 +477,7 @@ onUnmounted(() => {
           >
             <Bot :size="18" />
             <span>{{ t('nav.bots') }}</span>
+            <span class="nav-badge">{{ chatCounts.bots || 0 }}</span>
           </button>
 
           <button
@@ -451,6 +486,7 @@ onUnmounted(() => {
           >
             <User :size="18" />
             <span>{{ t('nav.users') }}</span>
+            <span class="nav-badge">{{ chatCounts.users || 0 }}</span>
           </button>
 
           <button
@@ -515,6 +551,7 @@ onUnmounted(() => {
             ['all', 'groups', 'channels', 'bots', 'users'].includes(activeView)
           "
           :category="activeView"
+          @update-counts="updateCounts"
         />
 
         <SettingsView

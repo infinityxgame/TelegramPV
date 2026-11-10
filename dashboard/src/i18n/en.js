@@ -129,7 +129,14 @@ export default {
     bot: 'Bot',
     user: 'User',
     openAction: 'Open in Telegram',
-    leaveAction: 'Leave / Delete'
+    leaveAction: 'Leave / Delete',
+    sortAZ: 'A to Z',
+    sortZA: 'Z to A',
+    sortRecent: 'Most recent',
+    filterAll: 'All',
+    filterPublic: 'Public',
+    filterPrivate: 'Private',
+    resultsCount: 'results'
   },
   settings: {
     kicker: 'PREFERENCES',
