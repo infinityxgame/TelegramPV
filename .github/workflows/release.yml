@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: Tests y vet antes de compilar
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -18,19 +18,32 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.x'
+          go-version: '1.26.x'
           cache: true
+
+      - name: Install Linux Wails dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libsoup-3.0-dev
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install Wails CLI
+        shell: bash
+        run: CGO_ENABLED=0 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
       - name: Install dashboard dependencies
         working-directory: dashboard
         run: npm ci
+
+      - name: Generate Wails bindings
+        shell: bash
+        run: CGO_ENABLED=0 wails3 generate bindings -d dashboard/src/bindings
 
       - name: Build dashboard
         working-directory: dashboard
@@ -55,23 +68,27 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.x'
+          go-version: '1.26.x'
           cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install Wails CLI
         shell: bash
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+        run: CGO_ENABLED=0 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
       - name: Install dashboard dependencies
         working-directory: dashboard
         run: npm ci
+
+      - name: Generate Wails bindings
+        shell: bash
+        run: wails3 generate bindings -d dashboard/src/bindings
 
       - name: Build dashboard
         working-directory: dashboard
@@ -79,7 +96,7 @@ jobs:
 
       - name: Build application with Wails
         shell: bash
-        run: wails build -clean -platform windows/amd64 -s -o TelegramPV -webview2 download
+        run: wails3 build
 
       - name: Package Windows
         shell: bash
@@ -92,8 +109,6 @@ jobs:
             BIN_PATH="build/bin/TelegramPV"
           elif [ -f "build/bin/tgpv.exe" ]; then
             BIN_PATH="build/bin/tgpv.exe"
-          elif [ -f "build/bin/tgpv" ]; then
-            BIN_PATH="build/bin/tgpv"
           else
             echo "Error: Binary not found in build/bin"
             ls -la build/bin
@@ -113,7 +128,7 @@ jobs:
   build-linux:
     name: Build Linux x86_64
     needs: test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -123,28 +138,32 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.x'
+          go-version: '1.26.x'
           cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install Linux Wails dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libsoup-3.0-dev
 
       - name: Install Wails CLI
         shell: bash
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+        run: CGO_ENABLED=0 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
       - name: Install dashboard dependencies
         working-directory: dashboard
         run: npm ci
+
+      - name: Generate Wails bindings
+        shell: bash
+        run: CGO_ENABLED=0 wails3 generate bindings -d dashboard/src/bindings
 
       - name: Build dashboard
         working-directory: dashboard
@@ -152,7 +171,7 @@ jobs:
 
       - name: Build application with Wails
         shell: bash
-        run: wails build -clean -platform linux/amd64 -s -o TelegramPV -webview2 download
+        run: wails3 build
 
       - name: Package Linux
         shell: bash
@@ -169,7 +188,8 @@ jobs:
   build-macos:
     name: Build macOS Universal
     needs: test
-    runs-on: macos-14
+    runs-on: macos-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -179,37 +199,92 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.x'
+          go-version: '1.26.x'
           cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install Wails CLI
         shell: bash
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+        run: CGO_ENABLED=0 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
       - name: Install dashboard dependencies
         working-directory: dashboard
         run: npm ci
 
+      - name: Generate Wails bindings
+        shell: bash
+        run: CGO_ENABLED=0 wails3 generate bindings -d dashboard/src/bindings
+
       - name: Build dashboard
         working-directory: dashboard
         run: npm run build
 
-      - name: Build application with Wails
+      - name: Update macOS version in Info.plist
         shell: bash
         run: |
-          wails build -clean -platform darwin/universal -s -o TelegramPV -webview2 download
-          chmod +x build/bin/TelegramPV.app/Contents/MacOS/TelegramPV
+          RAW_VERSION="${{ github.ref_name }}"
+          VERSION="${RAW_VERSION#v}"
+          echo "Setting macOS version to: $VERSION"
+          if [ -f "build/darwin/Info.plist" ]; then
+            plutil -replace CFBundleVersion -string "$VERSION" build/darwin/Info.plist || true
+            plutil -replace CFBundleShortVersionString -string "$VERSION" build/darwin/Info.plist || true
+          fi
+          if [ -f "build/darwin/Info.dev.plist" ]; then
+            plutil -replace CFBundleVersion -string "$VERSION" build/darwin/Info.dev.plist || true
+            plutil -replace CFBundleShortVersionString -string "$VERSION" build/darwin/Info.dev.plist || true
+          fi
+
+      - name: Build application (Sequential Universal Binary)
+        shell: bash
+        run: |
+          mkdir -p build/bin
+          
+          echo "Compilando arquitectura amd64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags purego,production -trimpath -buildvcs=false -ldflags="-w -s" -o build/bin/TelegramPV-amd64
+          
+          echo "Compilando arquitectura arm64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -tags purego,production -trimpath -buildvcs=false -ldflags="-w -s" -o build/bin/TelegramPV-arm64
+          
+          echo "Uniendo arquitecturas en binario Universal con lipo..."
+          lipo -create -output build/bin/TelegramPV build/bin/TelegramPV-amd64 build/bin/TelegramPV-arm64
+          rm -f build/bin/TelegramPV-amd64 build/bin/TelegramPV-arm64
+          
+          APP_DIR="build/bin/TelegramPV.app"
+          mkdir -p "$APP_DIR/Contents/MacOS"
+          mkdir -p "$APP_DIR/Contents/Resources"
+          
+          if [ -f "build/bin/TelegramPV" ]; then
+            mv "build/bin/TelegramPV" "$APP_DIR/Contents/MacOS/TelegramPV"
+          fi
+          
+          if [ -f "build/darwin/Info.plist" ]; then
+            cp "build/darwin/Info.plist" "$APP_DIR/Contents/Info.plist"
+          fi
+          
+          if [ -f "build/darwin/icons.icns" ]; then
+            cp "build/darwin/icons.icns" "$APP_DIR/Contents/Resources/icons.icns"
+          fi
+          
+          if [ -f "$APP_DIR/Contents/MacOS/TelegramPV" ]; then
+            chmod +x "$APP_DIR/Contents/MacOS/TelegramPV"
+          fi
+
+          codesign --force --deep --sign - "$APP_DIR" || true
 
       - name: Package macOS
         shell: bash
-        run: ditto -c -k --sequesterRsrc --keepParent build/bin/TelegramPV.app "TelegramPV-macOS-Universal-${{ github.ref_name }}.zip"
+        run: |
+          if [ -d "build/bin/TelegramPV.app" ]; then
+            ditto -c -k --sequesterRsrc --keepParent build/bin/TelegramPV.app "TelegramPV-macOS-Universal-${{ github.ref_name }}.zip"
+          else
+            cd build/bin && zip -r "../../TelegramPV-macOS-Universal-${{ github.ref_name }}.zip" . && cd ../..
+          fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
