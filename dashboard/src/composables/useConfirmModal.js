@@ -1,18 +1,18 @@
 import { reactive } from 'vue'
 import { t } from '../i18n'
 
-export function useConfirmModal() {
-  const modal = reactive({
-    show: false,
-    title: '',
-    message: '',
-    confirmText: '',
-    cancelText: '',
-    type: 'primary',
-    action: null,
-    cancelAction: null
-  })
+const modal = reactive({
+  show: false,
+  title: '',
+  message: '',
+  confirmText: '',
+  cancelText: '',
+  type: 'primary',
+  action: null,
+  cancelAction: null
+})
 
+export function useConfirmModal() {
   const openConfirm = (config) => {
     modal.title = config.title
     modal.message = config.message
@@ -25,6 +25,16 @@ export function useConfirmModal() {
     modal.show = true
   }
 
+  const confirm = (config) => {
+    return new Promise((resolve) => {
+      openConfirm({
+        ...config,
+        action: () => resolve(true),
+        cancelAction: () => resolve(false)
+      })
+    })
+  }
+
   const handleConfirm = () => {
     if (modal.action) modal.action()
     modal.show = false
@@ -35,5 +45,5 @@ export function useConfirmModal() {
     modal.show = false
   }
 
-  return { modal, openConfirm, handleConfirm, handleCancel }
+  return { modal, openConfirm, confirm, handleConfirm, handleCancel }
 }

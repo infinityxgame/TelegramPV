@@ -302,9 +302,9 @@ html.theme-light select option {
   border-color: var(--user-border-light, #234765);
 }
 .sidebar-nav button.selected .nav-badge {
-  background: var(--user-primary, #38a7ff);
-  color: var(--user-bg-base, #07111f);
-  border-color: transparent;
+  background: var(--user-primary, #38a7ff) !important;
+  color: var(--user-bg-base, #07111f) !important;
+  border-color: transparent !important;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--user-primary), transparent 60%);
 }
 

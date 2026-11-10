@@ -426,6 +426,10 @@
 .theme-twilight-comet .sidebar-nav button.selected::before {
   background-color: var(--tc-ribbon);
 }
+.theme-twilight-comet .sidebar-nav button.selected .nav-badge {
+  background: var(--tc-ribbon, #c9372c) !important;
+  color: #ffffff !important;
+}
 
 /* Los enlaces de ayuda ya eran de un rojo fijo: se alinean con el cordón. */
 .theme-twilight-comet .inline-link,
@@ -830,6 +834,11 @@
 }
 .theme-edge-runner .sidebar-nav button.selected span {
   color: var(--user-primary);
+}
+.theme-edge-runner .sidebar-nav button.selected .nav-badge {
+  background: var(--user-primary, #e0ff00) !important;
+  color: #0a0a0c !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--user-primary), transparent 50%);
 }
 
 @media (max-width: 900px) {
@@ -1332,6 +1341,10 @@
 }
 .theme-rainy-garden .sidebar-nav button.selected span {
   color: var(--rg-mist);
+}
+.theme-rainy-garden .sidebar-nav button.selected .nav-badge {
+  background: var(--user-primary, #e6ecef) !important;
+  color: #0f1c11 !important;
 }
 
 @media (max-width: 900px) {
@@ -2496,6 +2509,10 @@ html.theme-silent-cherry .sidebar-nav button.selected::before {
 html.theme-silent-cherry .sidebar-nav button.selected span {
   color: #a94a67;
 }
+html.theme-silent-cherry .sidebar-nav button.selected .nav-badge {
+  background: #a94a67 !important;
+  color: #ffffff !important;
+}
 html.theme-silent-cherry .sidebar-nav button:hover {
   background: color-mix(in srgb, var(--sc-sakura), transparent 70%);
   color: #a94a67;
@@ -2907,6 +2924,10 @@ html.theme-osx .sidebar-nav button.selected::before {
 html.theme-osx .sidebar-nav button.selected span {
   color: var(--osx-cyan);
 }
+html.theme-osx .sidebar-nav button.selected .nav-badge {
+  background: #0a84ff !important;
+  color: #ffffff !important;
+}
 
 @media (max-width: 900px) {
   html.theme-osx .sidebar-nav button.selected {
@@ -3271,6 +3292,10 @@ html.theme-herbal-apothecary .sidebar-nav button.selected::before {
 html.theme-herbal-apothecary .sidebar-nav button.selected span {
   color: var(--ha-sprout);
 }
+html.theme-herbal-apothecary .sidebar-nav button.selected .nav-badge {
+  background: var(--ha-sprout, #7fb069) !important;
+  color: #141f18 !important;
+}
 
 @media (max-width: 900px) {
   html.theme-herbal-apothecary .sidebar-nav button.selected {
@@ -3628,6 +3653,10 @@ html.theme-darling-red .sidebar-nav button.selected::before {
 }
 html.theme-darling-red .sidebar-nav button.selected span {
   color: var(--dr-cyan);
+}
+html.theme-darling-red .sidebar-nav button.selected .nav-badge {
+  background: var(--dr-cyan, #00e5ff) !important;
+  color: #14050c !important;
 }
 
 @media (max-width: 900px) {
@@ -4200,6 +4229,10 @@ html.theme-udyat .sidebar-nav button.selected {
 
 html.theme-udyat .sidebar-nav button.selected span {
   color: #ffffff;
+}
+html.theme-udyat .sidebar-nav button.selected .nav-badge {
+  background: #ffffff !important;
+  color: #007aff !important;
 }
 
 html.theme-udyat .sidebar-user-badge,
