@@ -323,11 +323,11 @@ onMounted(fetchChats)
           :class="{ active: roleFilter === 'creator' }"
           @click.prevent="toggleRoleFilter('creator')"
         >
-          <span>{{ t('chats.filterRoleOwner') }}</span>
           <span class="switch">
             <input type="checkbox" :checked="roleFilter === 'creator'" />
             <span></span>
           </span>
+          <span>{{ t('chats.filterRoleOwner') }}</span>
         </label>
 
         <label
@@ -335,11 +335,11 @@ onMounted(fetchChats)
           :class="{ active: roleFilter === 'admin' }"
           @click.prevent="toggleRoleFilter('admin')"
         >
-          <span>{{ t('chats.filterRoleAdmin') }}</span>
           <span class="switch">
             <input type="checkbox" :checked="roleFilter === 'admin'" />
             <span></span>
           </span>
+          <span>{{ t('chats.filterRoleAdmin') }}</span>
         </label>
 
         <span class="results-count">
@@ -354,11 +354,11 @@ onMounted(fetchChats)
           :class="{ active: roleFilter === 'creator' }"
           @click.prevent="toggleRoleFilter('creator')"
         >
-          <span>{{ t('chats.filterBotsOwner') }}</span>
           <span class="switch">
             <input type="checkbox" :checked="roleFilter === 'creator'" />
             <span></span>
           </span>
+          <span>{{ t('chats.filterBotsOwner') }}</span>
         </label>
 
         <span class="results-count">
@@ -586,12 +586,11 @@ onMounted(fetchChats)
 .filter-switch-label {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: var(--user-surface, #0b1a2a);
-  border: 1px solid var(--user-border, #1b344b);
+  gap: 9px;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
   color: var(--user-text-dim, #728ba2);
-  padding: 5px 12px 5px 14px;
-  border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -601,15 +600,46 @@ onMounted(fetchChats)
 }
 
 .filter-switch-label:hover {
-  background: var(--user-surface-light, #0e2032);
   color: #dbe7f5;
-  border-color: var(--user-border-light, #234765);
 }
 
 .filter-switch-label.active {
   color: #ffffff;
-  border-color: var(--user-primary, #38a7ff);
-  background: var(--user-surface-light, #0e2032);
+}
+
+.filter-switch-label .switch span {
+  width: 48px;
+  height: 26px;
+  background: var(--user-surface, #0b1a2a);
+  border: 1px solid var(--user-border, #1b344b);
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.filter-switch-label .switch span:after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 3px;
+  left: 3px;
+  background: #a5bad0;
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.filter-switch-label.active .switch span {
+  background: var(--user-primary, #38a7ff);
+  border-color: transparent;
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--user-primary), transparent 70%);
+}
+
+.filter-switch-label.active .switch span:after {
+  left: 25px;
+  background: #ffffff;
 }
 
 .results-count {
