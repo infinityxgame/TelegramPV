@@ -245,15 +245,15 @@ const openInTelegram = async () => {
 }
 
 .role-badge.creator {
-  background: rgba(255, 199, 100, 0.15);
-  color: #ffc764;
-  border: 1px solid rgba(255, 199, 100, 0.35);
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .role-badge.admin {
-  background: rgba(56, 167, 255, 0.15);
-  color: #5ebcff;
-  border: 1px solid rgba(56, 167, 255, 0.35);
+  background: rgba(56, 167, 255, 0.18);
+  color: #38a7ff;
+  border: 1px solid rgba(56, 167, 255, 0.4);
 }
 
 .chat-actions {

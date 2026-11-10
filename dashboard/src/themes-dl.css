@@ -4648,3 +4648,23 @@ html.theme-silent-cherry .filter-switch-label.active .switch span {
 html.theme-silent-cherry .filter-switch-label.active .switch span:after {
   background: #ffffff !important;
 }
+
+html.theme-silent-cherry .role-badge.creator,
+html.theme-light .role-badge.creator,
+html.theme-osx .role-badge.creator,
+html.theme-darling-red .role-badge.creator {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #f59e0b !important;
+  font-weight: 700 !important;
+}
+
+html.theme-silent-cherry .role-badge.admin,
+html.theme-light .role-badge.admin,
+html.theme-osx .role-badge.admin,
+html.theme-darling-red .role-badge.admin {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #38bdf8 !important;
+  font-weight: 700 !important;
+}
