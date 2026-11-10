@@ -33,7 +33,7 @@ const counts = ref({ all: 0, groups: 0, channels: 0, bots: 0, users: 0 })
 const searchQuery = ref('')
 const sortOrder = ref('az')
 const privacyFilter = ref('all')
-const roleFilter = ref('all')
+const roleFilter = ref('')
 const loading = ref(false)
 const syncing = ref(false)
 const selectedIDs = ref(new Set())
@@ -219,11 +219,19 @@ const allSelected = computed(() => {
   return displayedChats.value.every((c) => selectedIDs.value.has(c.id))
 })
 
+const toggleRoleFilter = (role) => {
+  if (roleFilter.value === role) {
+    roleFilter.value = ''
+  } else {
+    roleFilter.value = role
+  }
+}
+
 watch(
   () => props.category,
   () => {
     privacyFilter.value = 'all'
-    roleFilter.value = 'all'
+    roleFilter.value = ''
     selectedIDs.value.clear()
     fetchChats()
   }
@@ -305,54 +313,53 @@ onMounted(fetchChats)
         </button>
       </div>
 
-      <!-- Filtros de Rol y Propiedad para Grupos y Canales -->
+      <!-- Filtros de Rol y Propiedad para Grupos y Canales (Switches conmutables) -->
       <div
         v-if="['all', 'groups', 'channels'].includes(category)"
         class="privacy-filters"
       >
-        <button
-          class="filter-pill"
-          :class="{ active: roleFilter === 'all' }"
-          @click="roleFilter = 'all'"
-        >
-          {{ t('chats.filterRoleAll') }}
-        </button>
-        <button
-          class="filter-pill"
+        <label
+          class="filter-switch-label"
           :class="{ active: roleFilter === 'creator' }"
-          @click="roleFilter = 'creator'"
+          @click.prevent="toggleRoleFilter('creator')"
         >
-          {{ t('chats.filterRoleOwner') }}
-        </button>
-        <button
-          class="filter-pill"
+          <span>{{ t('chats.filterRoleOwner') }}</span>
+          <span class="switch">
+            <input type="checkbox" :checked="roleFilter === 'creator'" />
+            <span></span>
+          </span>
+        </label>
+
+        <label
+          class="filter-switch-label"
           :class="{ active: roleFilter === 'admin' }"
-          @click="roleFilter = 'admin'"
+          @click.prevent="toggleRoleFilter('admin')"
         >
-          {{ t('chats.filterRoleAdmin') }}
-        </button>
+          <span>{{ t('chats.filterRoleAdmin') }}</span>
+          <span class="switch">
+            <input type="checkbox" :checked="roleFilter === 'admin'" />
+            <span></span>
+          </span>
+        </label>
 
         <span class="results-count">
           {{ displayedChats.length }} {{ t('chats.resultsCount') }}
         </span>
       </div>
 
-      <!-- Filtro de Propiedad para Bots -->
+      <!-- Filtro de Propiedad para Bots (Switch conmutable) -->
       <div v-else-if="category === 'bots'" class="privacy-filters">
-        <button
-          class="filter-pill"
-          :class="{ active: roleFilter === 'all' }"
-          @click="roleFilter = 'all'"
-        >
-          {{ t('chats.filterBotsAll') }}
-        </button>
-        <button
-          class="filter-pill"
+        <label
+          class="filter-switch-label"
           :class="{ active: roleFilter === 'creator' }"
-          @click="roleFilter = 'creator'"
+          @click.prevent="toggleRoleFilter('creator')"
         >
-          {{ t('chats.filterBotsOwner') }}
-        </button>
+          <span>{{ t('chats.filterBotsOwner') }}</span>
+          <span class="switch">
+            <input type="checkbox" :checked="roleFilter === 'creator'" />
+            <span></span>
+          </span>
+        </label>
 
         <span class="results-count">
           {{ displayedChats.length }} {{ t('chats.resultsCount') }}
@@ -574,6 +581,35 @@ onMounted(fetchChats)
   border-color: transparent;
   box-shadow: 0 4px 12px
     color-mix(in srgb, var(--user-primary), transparent 70%);
+}
+
+.filter-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--user-surface, #0b1a2a);
+  border: 1px solid var(--user-border, #1b344b);
+  color: var(--user-text-dim, #728ba2);
+  padding: 5px 12px 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.filter-switch-label:hover {
+  background: var(--user-surface-light, #0e2032);
+  color: #dbe7f5;
+  border-color: var(--user-border-light, #234765);
+}
+
+.filter-switch-label.active {
+  color: #ffffff;
+  border-color: var(--user-primary, #38a7ff);
+  background: var(--user-surface-light, #0e2032);
 }
 
 .results-count {

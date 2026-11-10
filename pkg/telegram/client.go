@@ -470,6 +470,10 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 	var allChats []storage.Chat
 	seenIDs := make(map[int64]bool)
 
+	channelsMap := make(map[int64]*tg.Channel)
+	chatsMap := make(map[int64]*tg.Chat)
+	usersMap := make(map[int64]*tg.User)
+
 	// Recorrer carpeta principal (0) y archivados (1)
 	folderIDs := []int{0, 1}
 
@@ -520,10 +524,6 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 			if len(dialogs) == 0 && len(chats) == 0 {
 				break
 			}
-
-			channelsMap := make(map[int64]*tg.Channel)
-			chatsMap := make(map[int64]*tg.Chat)
-			usersMap := make(map[int64]*tg.User)
 
 			for _, c := range chats {
 				switch ch := c.(type) {
@@ -635,49 +635,56 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 				}
 			}
 
-			if len(messages) == 0 {
-				break
+			for _, usr := range usersMap {
+				if usr.Self || !usr.Bot {
+					continue
+				}
+				if seenIDs[usr.ID] {
+					continue
+				}
+				seenIDs[usr.ID] = true
+
+				var chatItem storage.Chat
+				chatItem.ID = usr.ID
+				chatItem.Title = userDisplayName(usr)
+				chatItem.Username = usr.Username
+				chatItem.AccessHash = usr.AccessHash
+				chatItem.Type = "bot"
+				chatItem.IsCreator = usr.BotCanEdit
+				chatItem.IsAdmin = usr.BotCanEdit
+				allChats = append(allChats, chatItem)
 			}
 
-			lastMsgClass := messages[len(messages)-1]
-			var lastID int
-			var lastDate int
-			var lastPeer tg.PeerClass
-
-			switch m := lastMsgClass.(type) {
-			case *tg.Message:
-				lastID = m.ID
-				lastDate = m.Date
-				lastPeer = m.PeerID
-			case *tg.MessageService:
-				lastID = m.ID
-				lastDate = m.Date
-				lastPeer = m.PeerID
+			if len(dialogs) > 0 {
+				lastDlgClass := dialogs[len(dialogs)-1]
+				if lastDlg, ok := lastDlgClass.(*tg.Dialog); ok {
+					offsetID = lastDlg.TopMessage
+					switch p := lastDlg.Peer.(type) {
+					case *tg.PeerChannel:
+						cm.mu.RLock()
+						hash := cm.channelAccessHashes[p.ChannelID]
+						cm.mu.RUnlock()
+						offsetPeer = &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
+					case *tg.PeerUser:
+						cm.mu.RLock()
+						hash := cm.userAccessHashes[p.UserID]
+						cm.mu.RUnlock()
+						offsetPeer = &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
+					case *tg.PeerChat:
+						offsetPeer = &tg.InputPeerChat{ChatID: p.ChatID}
+					default:
+						offsetPeer = &tg.InputPeerEmpty{}
+					}
+				}
 			}
 
-			if lastID == 0 {
-				break
-			}
-
-			offsetID = lastID
-			offsetDate = lastDate
-
-			if lastPeer != nil {
-				switch p := lastPeer.(type) {
-				case *tg.PeerChannel:
-					cm.mu.RLock()
-					hash := cm.channelAccessHashes[p.ChannelID]
-					cm.mu.RUnlock()
-					offsetPeer = &tg.InputPeerChannel{ChannelID: p.ChannelID, AccessHash: hash}
-				case *tg.PeerUser:
-					cm.mu.RLock()
-					hash := cm.userAccessHashes[p.UserID]
-					cm.mu.RUnlock()
-					offsetPeer = &tg.InputPeerUser{UserID: p.UserID, AccessHash: hash}
-				case *tg.PeerChat:
-					offsetPeer = &tg.InputPeerChat{ChatID: p.ChatID}
-				default:
-					offsetPeer = &tg.InputPeerEmpty{}
+			if len(messages) > 0 {
+				lastMsgClass := messages[len(messages)-1]
+				switch m := lastMsgClass.(type) {
+				case *tg.Message:
+					offsetDate = m.Date
+				case *tg.MessageService:
+					offsetDate = m.Date
 				}
 			}
 
@@ -685,6 +692,68 @@ func (cm *ClientManager) FetchDialogsAndSave(ctx context.Context, st *storage.St
 				break
 			}
 		}
+	}
+
+	// Procesar canales adicionales que vinieron en chats pero no tenían un item dialog
+	for _, ch := range channelsMap {
+		canonicID, _ := strconv.ParseInt(fmt.Sprintf("-100%d", ch.ID), 10, 64)
+		if seenIDs[canonicID] {
+			continue
+		}
+		seenIDs[canonicID] = true
+
+		var chatItem storage.Chat
+		chatItem.ID = canonicID
+		chatItem.Title = ch.Title
+		chatItem.Username = ch.Username
+		chatItem.AccessHash = ch.AccessHash
+		chatItem.IsCreator = ch.Creator
+		chatItem.IsAdmin = ch.Creator || ch.AdminRights.Flags != 0
+
+		if ch.Broadcast {
+			chatItem.Type = "channel"
+		} else {
+			chatItem.Type = "group"
+		}
+		allChats = append(allChats, chatItem)
+	}
+
+	// Procesar grupos adicionales
+	for _, ch := range chatsMap {
+		canonicID := -ch.ID
+		if seenIDs[canonicID] {
+			continue
+		}
+		seenIDs[canonicID] = true
+
+		var chatItem storage.Chat
+		chatItem.ID = canonicID
+		chatItem.Title = ch.Title
+		chatItem.Type = "group"
+		chatItem.IsCreator = ch.Creator
+		chatItem.IsAdmin = ch.Creator || ch.AdminRights.Flags != 0
+		allChats = append(allChats, chatItem)
+	}
+
+	// Procesar todos los bots presentes en los usuarios devueltos (incluso sin dialogo activo)
+	for _, usr := range usersMap {
+		if usr.Self || !usr.Bot {
+			continue
+		}
+		if seenIDs[usr.ID] {
+			continue
+		}
+		seenIDs[usr.ID] = true
+
+		var chatItem storage.Chat
+		chatItem.ID = usr.ID
+		chatItem.Title = userDisplayName(usr)
+		chatItem.Username = usr.Username
+		chatItem.AccessHash = usr.AccessHash
+		chatItem.Type = "bot"
+		chatItem.IsCreator = usr.BotCanEdit
+		chatItem.IsAdmin = usr.BotCanEdit
+		allChats = append(allChats, chatItem)
 	}
 
 	if len(allChats) > 0 {
