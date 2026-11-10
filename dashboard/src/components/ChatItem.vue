@@ -204,7 +204,7 @@ const openInTelegram = async () => {
 }
 
 .chat-title {
-  color: #f2f7fc;
+  color: var(--user-text-main, #f2f7fc);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;

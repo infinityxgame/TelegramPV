@@ -4423,3 +4423,155 @@ html.theme-udyat .update-required-overlay {
     var(--apple-tv-bg-base) 70%
   );
 }
+
+/* ==========================================================================
+   AJUSTES Y CORRECCIONES DE TEMAS VISUALES EN BANDERAS, BOTONES Y CONTRASTE
+   ========================================================================== */
+
+/* 1. Twilight Comet: color morado/púrpura (#9b62f0) en píldoras activas y switches */
+.theme-twilight-comet .filter-pill.active,
+.theme-twilight-comet .filter-switch-label.active .switch span {
+  background: #9b62f0 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(155, 98, 240, 0.45) !important;
+}
+
+/* 2. Edge Runner UI: texto negro (#000000) sobre fondo amarillo neón */
+.theme-edge-runner .filter-pill.active,
+.theme-edge-runner .filter-switch-label.active,
+.theme-edge-runner .filter-switch-label.active span {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+.theme-edge-runner .filter-switch-label.active .switch span:after {
+  background: #000000 !important;
+}
+
+/* 3. Rainy Garden: texto verde oscuro/negro (#0d1a0d) sobre píldora activa */
+.theme-rainy-garden .filter-pill.active,
+.theme-rainy-garden .filter-switch-label.active,
+.theme-rainy-garden .filter-switch-label.active span {
+  color: #0d1a0d !important;
+  font-weight: 700 !important;
+}
+.theme-rainy-garden .filter-switch-label.active .switch span:after {
+  background: #0d1a0d !important;
+}
+
+/* 4. Herbal Apothecary: texto verde oscuro/negro (#09180d) sobre píldora activa */
+html.theme-herbal-apothecary .filter-pill.active,
+html.theme-herbal-apothecary .filter-switch-label.active,
+html.theme-herbal-apothecary .filter-switch-label.active span {
+  color: #09180d !important;
+  font-weight: 700 !important;
+}
+html.theme-herbal-apothecary .filter-switch-label.active .switch span:after {
+  background: #09180d !important;
+}
+
+/* 5. Silent Cherry y temas claros (Light, OSX, Darling Red) - Solución a bugs de contraste */
+html.theme-silent-cherry,
+html.theme-light,
+html.theme-osx,
+html.theme-darling-red {
+  --user-text-main: #2e1e2b;
+}
+
+html.theme-silent-cherry .sort-select,
+html.theme-light .sort-select,
+html.theme-osx .sort-select,
+html.theme-darling-red .sort-select {
+  background-color: color-mix(
+    in srgb,
+    var(--user-surface),
+    #ffffff 50%
+  ) !important;
+  border: 1px solid var(--user-border, #e0c8d8) !important;
+  color: #2e1e2b !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232e1e2b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+
+html.theme-silent-cherry .sort-select option,
+html.theme-light .sort-select option,
+html.theme-osx .sort-select option,
+html.theme-darling-red .sort-select option {
+  background-color: #ffffff !important;
+  color: #2e1e2b !important;
+}
+
+html.theme-silent-cherry .chat-title,
+html.theme-light .chat-title,
+html.theme-osx .chat-title,
+html.theme-darling-red .chat-title {
+  color: #2e1e2b !important;
+}
+
+html.theme-silent-cherry .chat-username,
+html.theme-light .chat-username,
+html.theme-osx .chat-username,
+html.theme-darling-red .chat-username {
+  color: #b03a56 !important;
+}
+
+html.theme-silent-cherry .chat-id-badge,
+html.theme-silent-cherry .chat-type-label,
+html.theme-silent-cherry .results-count,
+html.theme-silent-cherry .selected-count,
+html.theme-light .chat-id-badge,
+html.theme-light .chat-type-label,
+html.theme-light .results-count,
+html.theme-light .selected-count {
+  color: #6b5c68 !important;
+}
+
+html.theme-silent-cherry .search-box input,
+html.theme-light .search-box input {
+  color: #2e1e2b !important;
+  background: transparent !important;
+}
+
+html.theme-silent-cherry .search-box,
+html.theme-light .search-box {
+  background-color: color-mix(
+    in srgb,
+    var(--user-surface),
+    #ffffff 50%
+  ) !important;
+  border-color: var(--user-border) !important;
+}
+
+html.theme-silent-cherry .btn-export,
+html.theme-light .btn-export {
+  background-color: color-mix(
+    in srgb,
+    var(--user-surface),
+    #ffffff 50%
+  ) !important;
+  color: #2e1e2b !important;
+  border-color: var(--user-border) !important;
+}
+
+html.theme-silent-cherry .btn-select-all,
+html.theme-light .btn-select-all {
+  color: #b03a56 !important;
+}
+
+html.theme-silent-cherry .filter-pill,
+html.theme-silent-cherry .filter-switch-label {
+  color: #6b5c68 !important;
+}
+
+html.theme-silent-cherry .filter-pill.active,
+html.theme-silent-cherry .filter-switch-label.active {
+  background: #e07a9d !important;
+  color: #ffffff !important;
+}
+
+html.theme-silent-cherry .filter-switch-label.active .switch span {
+  background: #e07a9d !important;
+}
+
+html.theme-silent-cherry .filter-switch-label.active .switch span:after {
+  background: #ffffff !important;
+}
