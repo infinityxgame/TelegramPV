@@ -2509,9 +2509,20 @@ html.theme-silent-cherry .sidebar-nav button.selected::before {
 html.theme-silent-cherry .sidebar-nav button.selected span {
   color: #a94a67;
 }
+html.theme-silent-cherry .nav-badge {
+  background: color-mix(in srgb, var(--sc-sakura), transparent 50%) !important;
+  color: #463a57 !important;
+  font-weight: 700 !important;
+}
+html.theme-silent-cherry .sidebar-nav button:hover .nav-badge {
+  background: #f48fb1 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
 html.theme-silent-cherry .sidebar-nav button.selected .nav-badge {
   background: #a94a67 !important;
   color: #ffffff !important;
+  font-weight: 700 !important;
 }
 html.theme-silent-cherry .sidebar-nav button:hover {
   background: color-mix(in srgb, var(--sc-sakura), transparent 70%);
@@ -4470,12 +4481,32 @@ html.theme-herbal-apothecary .filter-switch-label.active .switch span:after {
   background: #09180d !important;
 }
 
-/* 5. Silent Cherry y temas claros (Light, OSX, Darling Red) - Solución a bugs de contraste */
+/* 5. Silent Cherry y temas claros (Light, OSX, Darling Red) - Solución completa a contraste y botones */
 html.theme-silent-cherry,
 html.theme-light,
 html.theme-osx,
 html.theme-darling-red {
   --user-text-main: #2e1e2b;
+}
+
+html.theme-silent-cherry .topbar h1,
+html.theme-silent-cherry .panel-heading h2,
+html.theme-silent-cherry .hero-card h2,
+html.theme-silent-cherry .logs-hero h2,
+html.theme-silent-cherry .setting-label,
+html.theme-silent-cherry .accordion-header h3,
+html.theme-silent-cherry .accordion-header strong,
+html.theme-silent-cherry .accordion-title {
+  color: #2e1e2b !important;
+  font-weight: 700 !important;
+}
+
+html.theme-silent-cherry .accordion-desc,
+html.theme-silent-cherry .accordion-sub,
+html.theme-silent-cherry .setting-desc,
+html.theme-silent-cherry .results-count,
+html.theme-silent-cherry .selected-count {
+  color: #6b5c68 !important;
 }
 
 html.theme-silent-cherry .sort-select,
@@ -4485,7 +4516,7 @@ html.theme-darling-red .sort-select {
   background-color: color-mix(
     in srgb,
     var(--user-surface),
-    #ffffff 50%
+    #ffffff 60%
   ) !important;
   border: 1px solid var(--user-border, #e0c8d8) !important;
   color: #2e1e2b !important;
@@ -4525,20 +4556,32 @@ html.theme-light .selected-count {
   color: #6b5c68 !important;
 }
 
+html.theme-silent-cherry .search-box,
+html.theme-light .search-box {
+  background-color: color-mix(
+    in srgb,
+    var(--user-surface),
+    #ffffff 60%
+  ) !important;
+  border: 1px solid var(--user-border, #e0c8d8) !important;
+}
+
 html.theme-silent-cherry .search-box input,
 html.theme-light .search-box input {
   color: #2e1e2b !important;
   background: transparent !important;
 }
 
-html.theme-silent-cherry .search-box,
-html.theme-light .search-box {
-  background-color: color-mix(
-    in srgb,
-    var(--user-surface),
-    #ffffff 50%
-  ) !important;
-  border-color: var(--user-border) !important;
+html.theme-silent-cherry .search-box input::placeholder,
+html.theme-light .search-box input::placeholder {
+  color: #7d6b78 !important;
+}
+
+html.theme-silent-cherry .btn-sync,
+html.theme-silent-cherry .btn-sync * {
+  color: #111111 !important;
+  stroke: #111111 !important;
+  font-weight: 700 !important;
 }
 
 html.theme-silent-cherry .btn-export,
@@ -4546,10 +4589,10 @@ html.theme-light .btn-export {
   background-color: color-mix(
     in srgb,
     var(--user-surface),
-    #ffffff 50%
+    #ffffff 60%
   ) !important;
   color: #2e1e2b !important;
-  border-color: var(--user-border) !important;
+  border-color: var(--user-border, #e0c8d8) !important;
 }
 
 html.theme-silent-cherry .btn-select-all,
@@ -4557,19 +4600,38 @@ html.theme-light .btn-select-all {
   color: #b03a56 !important;
 }
 
-html.theme-silent-cherry .filter-pill,
+html.theme-silent-cherry .filter-pill {
+  color: #6b5c68 !important;
+  background: color-mix(in srgb, var(--user-surface), #ffffff 40%) !important;
+  border-color: var(--user-border, #e0c8d8) !important;
+}
+
+html.theme-silent-cherry .filter-pill.active {
+  background: #f48fb1 !important;
+  color: #2e1e2b !important;
+  font-weight: 700 !important;
+}
+
 html.theme-silent-cherry .filter-switch-label {
+  background: transparent !important;
+  border: none !important;
   color: #6b5c68 !important;
 }
 
-html.theme-silent-cherry .filter-pill.active,
 html.theme-silent-cherry .filter-switch-label.active {
-  background: #e07a9d !important;
-  color: #ffffff !important;
+  color: #2e1e2b !important;
+  font-weight: 700 !important;
+}
+
+html.theme-silent-cherry .filter-switch-label .switch span {
+  background: color-mix(in srgb, var(--user-surface), #ffffff 30%) !important;
+  border-color: var(--user-border, #e0c8d8) !important;
 }
 
 html.theme-silent-cherry .filter-switch-label.active .switch span {
-  background: #e07a9d !important;
+  background: #f48fb1 !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(244, 143, 177, 0.45) !important;
 }
 
 html.theme-silent-cherry .filter-switch-label.active .switch span:after {
