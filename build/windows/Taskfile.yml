@@ -90,9 +90,9 @@ tasks:
 
   generate:syso:
     summary: Generates Windows `.syso` file
-    dir: '{{.ROOT_DIR}}/build'
+    dir: '{{.ROOT_DIR}}'
     cmds:
-      - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails.exe.manifest -info windows/info.json -out ../wails_windows_{{.ARCH}}.syso
+      - wails3 generate syso -arch {{.ARCH}} -icon build/windows/icon.ico -manifest build/windows/wails.exe.manifest -info build/windows/info.json -out wails_windows_{{.ARCH}}.syso
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
 
