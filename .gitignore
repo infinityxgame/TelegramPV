@@ -8,7 +8,6 @@ dist/
 # Application executables and builds
 build/bin/
 *.exe
-*.exe.manifest
 *.dll
 *.so
 *.dylib
