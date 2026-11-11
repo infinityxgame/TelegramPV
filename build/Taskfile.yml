@@ -145,7 +145,7 @@ tasks:
   generate:icons:
     summary: Generates Windows `.ico` and macOS `.icns`
     run: once
-    dir: build
+    dir: '{{.ROOT_DIR}}/build'
     sources:
       - "appicon.png"
     generates:
@@ -183,7 +183,7 @@ tasks:
 
   update:build-assets:
     summary: Updates the build assets
-    dir: build
+    dir: '{{.ROOT_DIR}}/build'
     cmds:
       - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .
 

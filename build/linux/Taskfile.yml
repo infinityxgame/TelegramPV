@@ -58,7 +58,7 @@ tasks:
 
   generate:dotdesktop:
     summary: Generates a `.desktop` file
-    dir: build
+    dir: '{{.ROOT_DIR}}/build'
     cmds:
       - mkdir -p {{.ROOT_DIR}}/build/linux/appimage
       - wails3 generate .desktop -name "{{.APP_NAME}}" -exec "{{.EXEC}}" -icon "{{.ICON}}" -outputfile "{{.ROOT_DIR}}/build/linux/{{.APP_NAME}}.desktop" -categories "{{.CATEGORIES}}"
